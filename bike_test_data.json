@@ -1,0 +1,100 @@
+{
+  "assumptions": {
+    "currency": "INR",
+    "pricing": "per_day",
+    "status": "available",
+    "security_deposit": {
+      "scooter": 2000,
+      "local": 2000,
+      "bike": 3000
+    }
+  },
+  "bikes": [
+    {
+      "name": "Ntorq 125 (Regular)",
+      "category": "scooter",
+      "daily_price": 800,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "Comfort Ride"]
+    },
+    {
+      "name": "Ntorq 125 (XP / XT)",
+      "category": "scooter",
+      "daily_price": 900,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "Sport Mode"]
+    },
+    {
+      "name": "Ntorq 125 (New Gen)",
+      "category": "scooter",
+      "daily_price": 1000,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "New Generation"]
+    },
+
+    {
+      "name": "Classic / Hunter 350cc",
+      "category": "bike",
+      "daily_price": 1600,
+      "security_deposit": 3000,
+      "features": ["Manual", "Petrol", "Touring"]
+    },
+    {
+      "name": "Himalayan 411",
+      "category": "bike",
+      "daily_price": 1700,
+      "security_deposit": 3000,
+      "features": ["Manual", "Petrol", "Adventure"]
+    },
+    {
+      "name": "Xpulse 200cc",
+      "category": "bike",
+      "daily_price": 1400,
+      "security_deposit": 3000,
+      "features": ["Manual", "Petrol", "Off-road"]
+    },
+    {
+      "name": "TVS Apache RTR 160",
+      "category": "bike",
+      "daily_price": 1250,
+      "security_deposit": 3000,
+      "features": ["Manual", "Petrol", "Sport"]
+    },
+    {
+      "name": "Bajaj Pulsar NS 160",
+      "category": "bike",
+      "daily_price": 1250,
+      "security_deposit": 3000,
+      "features": ["Manual", "Petrol", "Street"]
+    },
+
+    {
+      "name": "Jupiter 110cc",
+      "category": "local",
+      "daily_price": 600,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "Local Use"]
+    },
+    {
+      "name": "Activa 125cc",
+      "category": "local",
+      "daily_price": 600,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "Local Use"]
+    },
+    {
+      "name": "Radeon 110cc",
+      "category": "local",
+      "daily_price": 800,
+      "security_deposit": 2000,
+      "features": ["Manual", "Petrol", "Commuter"]
+    },
+    {
+      "name": "Access 125cc",
+      "category": "local",
+      "daily_price": 700,
+      "security_deposit": 2000,
+      "features": ["Automatic", "Petrol", "Local Use"]
+    }
+  ]
+}
