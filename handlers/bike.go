@@ -41,6 +41,17 @@ func (h *BikeHandler) List(c *gin.Context) {
 		statusPtr = &s
 	}
 
+	locationIDStr := c.Query("location_id")
+	var locationIDPtr *uuid.UUID
+	if locationIDStr != "" {
+		locationID, err := uuid.Parse(locationIDStr)
+		if err != nil {
+			utils.ErrorResponse(c, http.StatusBadRequest, "invalid location_id", err)
+			return
+		}
+		locationIDPtr = &locationID
+	}
+
 	pageStr := c.DefaultQuery("page", "1")
 	limitStr := c.DefaultQuery("limit", "20")
 
@@ -55,7 +66,7 @@ func (h *BikeHandler) List(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	bikes, total, err := h.repo.ListBikes(ctx, categoryPtr, statusPtr, offset, limit)
+	bikes, total, err := h.repo.ListBikes(ctx, categoryPtr, statusPtr, locationIDPtr, offset, limit)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to list bikes", err)
 		return
@@ -122,4 +133,54 @@ func (h *BikeHandler) GetAvailability(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "availability retrieved", map[string]interface{}{"available": avail})
+}
+
+// CreateBikeRequest represents the request body for creating a bike
+type CreateBikeRequest struct {
+	Name            string   `json:"name" binding:"required"`
+	Category        string   `json:"category" binding:"required"`
+	DailyPrice      float64  `json:"daily_price" binding:"required,gt=0"`
+	HourlyPrice     *float64 `json:"hourly_price,omitempty"`
+	SecurityDeposit float64  `json:"security_deposit" binding:"required,gt=0"`
+	ImageURL        *string  `json:"image_url,omitempty"`
+	Description     *string  `json:"description,omitempty"`
+	Features        []string `json:"features,omitempty"`
+	Status          string   `json:"status,omitempty"` // defaults to 'active'
+}
+
+// Create handles POST request to create a new bike
+func (h *BikeHandler) Create(c *gin.Context) {
+	ctx := context.Background()
+
+	var req CreateBikeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.ValidationErrorResponse(c, err.Error())
+		return
+	}
+
+	// Set default status
+	status := models.BikeActive
+	if req.Status != "" {
+		status = models.BikeStatus(req.Status)
+	}
+
+	bike := &models.Bike{
+		Name:            req.Name,
+		Category:        req.Category,
+		DailyPrice:      req.DailyPrice,
+		HourlyPrice:     req.HourlyPrice,
+		SecurityDeposit: req.SecurityDeposit,
+		ImageURL:        req.ImageURL,
+		Description:     req.Description,
+		Features:        req.Features,
+		Status:          status,
+	}
+
+	createdBike, err := h.repo.CreateBike(ctx, bike)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to create bike", err)
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, "bike created successfully", createdBike)
 }

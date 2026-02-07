@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"bike-at-rent/models"
 
@@ -372,4 +373,58 @@ func (r *UserRepository) GetKYCByUserID(ctx context.Context, userID uuid.UUID) (
 	}
 
 	return kyc, nil
+}
+
+// ListUsers returns paginated list of users with optional name filter
+func (r *UserRepository) ListUsers(ctx context.Context, name *string, offset, limit int) ([]map[string]interface{}, int, error) {
+	users := []map[string]interface{}{}
+
+	// Build base query
+	query := `SELECT u.id, u.email, u.phone, u.created_at, u.updated_at, p.name, p.address 
+		FROM users u 
+		LEFT JOIN profiles p ON u.id = p.user_id`
+	args := []interface{}{}
+	where := ""
+
+	if name != nil {
+		args = append(args, fmt.Sprintf("%%%s%%", *name))
+		where += fmt.Sprintf(" WHERE p.name ILIKE $%d", len(args))
+	}
+
+	// Count total
+	countQuery := "SELECT COUNT(1) FROM users u LEFT JOIN profiles p ON u.id = p.user_id" + where
+	var total int
+	if err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count users: %w", err)
+	}
+
+	// Add ordering, limit, offset
+	args = append(args, limit, offset)
+	finalQuery := query + where + fmt.Sprintf(" ORDER BY u.created_at DESC LIMIT $%d OFFSET $%d", len(args)-1, len(args))
+
+	rows, err := r.db.Query(ctx, finalQuery, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query users: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID, email, phone, profileName, address interface{}
+		var createdAt, updatedAt time.Time
+		if err := rows.Scan(&userID, &email, &phone, &createdAt, &updatedAt, &profileName, &address); err != nil {
+			return nil, 0, fmt.Errorf("failed to scan user: %w", err)
+		}
+		userMap := map[string]interface{}{
+			"id":         userID,
+			"email":      email,
+			"phone":      phone,
+			"name":       profileName,
+			"address":    address,
+			"created_at": createdAt,
+			"updated_at": updatedAt,
+		}
+		users = append(users, userMap)
+	}
+
+	return users, total, nil
 }

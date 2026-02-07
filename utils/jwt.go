@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Claims represents JWT custom claims
@@ -92,13 +93,15 @@ func ValidateToken(tokenString string) (*Claims, error) {
 
 // HashPassword hashes a plain text password using bcrypt
 func HashPassword(password string) (string, error) {
-	// Using a simple implementation for now
-	// In production, use bcrypt.GenerateFromPassword
-	return password, nil // TODO: Implement proper bcrypt hashing
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
 }
 
 // VerifyPassword verifies if plain password matches hash
 func VerifyPassword(hashedPassword, password string) bool {
-	// TODO: Implement proper bcrypt comparison
-	return hashedPassword == password
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }

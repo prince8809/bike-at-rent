@@ -14,6 +14,9 @@ import (
 func SetupRoutes(router *gin.Engine) {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(database.DB)
+	bikeRepo := repository.NewBikeRepository(database.DB)
+	locationRepo := repository.NewLocationRepository(database.DB)
+	bookingRepo := repository.NewBookingRepository(database.DB)
 
 	// Initialize services
 	authService := services.NewAuthService(userRepo)
@@ -21,6 +24,10 @@ func SetupRoutes(router *gin.Engine) {
 	// Initialize handlers
 	healthHandler := handlers.NewHealthHandler()
 	authHandler := handlers.NewAuthHandler(authService)
+	userHandler := handlers.NewUserHandler(userRepo)
+	bikeHandler := handlers.NewBikeHandler(bikeRepo)
+	locationHandler := handlers.NewLocationHandler(locationRepo)
+	bookingHandler := handlers.NewBookingHandler(bookingRepo)
 
 	// Apply global middleware
 	router.Use(middleware.CORSMiddleware())
@@ -58,31 +65,41 @@ func SetupRoutes(router *gin.Engine) {
 			operator.POST("/customers", authHandler.CreateOfflineCustomer)
 		}
 
-		// Bike routes (to be implemented)
+		// User routes
+		users := v1.Group("/users")
+		{
+			// Public: Create user (registration)
+			users.POST("", userHandler.Create)
+			// Public: List users (with optional name filter)
+			users.GET("", userHandler.List)
+			// Protected: Get user by ID
+			users.GET("/:id", middleware.JWTAuthMiddleware(), userHandler.GetByID)
+		}
+
 		// Bike routes
-		bikeRepo := repository.NewBikeRepository(database.DB)
-		bikeHandler := handlers.NewBikeHandler(bikeRepo)
 		bikes := v1.Group("/bikes")
 		{
 			bikes.GET("", bikeHandler.List)
+			bikes.POST("", bikeHandler.Create)
 			bikes.GET("/availability", bikeHandler.GetAvailability)
 		}
 
-		// Locations routes (to be implemented)
-		// locations := v1.Group("/locations")
-		// {
-		// 	locations.GET("", locationHandler.List)
-		// }
+		// Location routes
+		locations := v1.Group("/locations")
+		{
+			locations.GET("", locationHandler.List)
+			locations.POST("", locationHandler.Create)
+			locations.GET("/:id", locationHandler.GetByID)
+		}
 
-		// Booking routes (to be implemented)
-		// bookings := v1.Group("/bookings")
-		// bookings.Use(middleware.JWTAuthMiddleware())
-		// {
-		// 	bookings.POST("/calculate", bookingHandler.CalculatePricing)
-		// 	bookings.POST("", bookingHandler.Create)
-		// 	bookings.GET("", bookingHandler.ListUserBookings)
-		// 	bookings.GET("/:id", bookingHandler.GetByID)
-		// }
+		// Booking routes
+		bookings := v1.Group("/bookings")
+		bookings.Use(middleware.JWTAuthMiddleware())
+		{
+			bookings.POST("", bookingHandler.Create)
+			bookings.GET("", bookingHandler.List)
+			bookings.GET("/:id", bookingHandler.GetByID)
+		}
 
 		// Admin routes (to be implemented)
 		// admin := v1.Group("/admin")

@@ -21,17 +21,36 @@ func NewBikeRepository(db *pgxpool.Pool) *BikeRepository {
 }
 
 // ListBikes returns paginated bikes with optional filters
-func (r *BikeRepository) ListBikes(ctx context.Context, category *string, status *models.BikeStatus, offset, limit int) ([]models.Bike, int, error) {
+func (r *BikeRepository) ListBikes(ctx context.Context, category *string, status *models.BikeStatus, locationID *uuid.UUID, offset, limit int) ([]models.Bike, int, error) {
 	bikes := []models.Bike{}
 
-	// Build base query
-	query := `SELECT id, name, category, daily_price, hourly_price, security_deposit, image_url, description, features, status, created_at, updated_at FROM bikes`
+	// Build base query - if location filter, join with bike_inventory
+	var query string
+	if locationID != nil {
+		query = `SELECT DISTINCT b.id, b.name, b.category, b.daily_price, b.hourly_price, b.security_deposit, b.image_url, b.description, b.features, b.status, b.created_at, b.updated_at 
+		FROM bikes b 
+		JOIN bike_inventory bi ON b.id = bi.bike_id 
+		WHERE bi.location_id = $1`
+	} else {
+		query = `SELECT b.id, b.name, b.category, b.daily_price, b.hourly_price, b.security_deposit, b.image_url, b.description, b.features, b.status, b.created_at, b.updated_at FROM bikes b`
+	}
+
 	args := []interface{}{}
 	where := ""
 
+	// Add location filter if provided
+	if locationID != nil {
+		args = append(args, *locationID)
+		where = " AND " // Start with AND since location is in WHERE
+	}
+
 	if category != nil {
 		args = append(args, *category)
-		where += fmt.Sprintf(" WHERE category = $%d", len(args))
+		if where == "" {
+			where += fmt.Sprintf(" WHERE category = $%d", len(args))
+		} else {
+			where += fmt.Sprintf("category = $%d", len(args))
+		}
 	}
 
 	if status != nil {
@@ -44,15 +63,21 @@ func (r *BikeRepository) ListBikes(ctx context.Context, category *string, status
 	}
 
 	// Count total
-	countQuery := "SELECT COUNT(1) FROM bikes" + where
+	countQuery := "SELECT COUNT(DISTINCT b.id) FROM bikes b"
+	if locationID != nil {
+		countQuery += " JOIN bike_inventory bi ON b.id = bi.bike_id WHERE bi.location_id = $1"
+	}
+	countQuery += where
+
+	countArgs := args
 	var total int
-	if err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+	if err := r.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("failed to count bikes: %w", err)
 	}
 
 	// Add ordering, limit, offset
 	args = append(args, limit, offset)
-	finalQuery := query + where + fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", len(args)-1, len(args))
+	finalQuery := query + where + fmt.Sprintf(" ORDER BY b.created_at DESC LIMIT $%d OFFSET $%d", len(args)-1, len(args))
 
 	rows, err := r.db.Query(ctx, finalQuery, args...)
 	if err != nil {
@@ -90,4 +115,47 @@ func (r *BikeRepository) GetAvailabilityAtLocation(ctx context.Context, bikeID, 
 		return 0, nil
 	}
 	return available, nil
+}
+
+// CreateBike inserts a new bike into the database
+func (r *BikeRepository) CreateBike(ctx context.Context, bike *models.Bike) (*models.Bike, error) {
+	bike.ID = uuid.New()
+
+	query := `
+		INSERT INTO bikes (id, name, category, daily_price, hourly_price, security_deposit, image_url, description, features, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+		RETURNING id, name, category, daily_price, hourly_price, security_deposit, image_url, description, features, status, created_at, updated_at
+	`
+
+	err := r.db.QueryRow(ctx, query,
+		bike.ID,
+		bike.Name,
+		bike.Category,
+		bike.DailyPrice,
+		bike.HourlyPrice,
+		bike.SecurityDeposit,
+		bike.ImageURL,
+		bike.Description,
+		bike.Features,
+		bike.Status,
+	).Scan(
+		&bike.ID,
+		&bike.Name,
+		&bike.Category,
+		&bike.DailyPrice,
+		&bike.HourlyPrice,
+		&bike.SecurityDeposit,
+		&bike.ImageURL,
+		&bike.Description,
+		&bike.Features,
+		&bike.Status,
+		&bike.CreatedAt,
+		&bike.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bike: %w", err)
+	}
+
+	return bike, nil
 }
