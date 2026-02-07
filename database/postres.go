@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"bikeatrent-backend/config"
+	"bike-at-rent/config"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )

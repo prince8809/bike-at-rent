@@ -3,7 +3,7 @@ package middleware
 import (
 	"strings"
 
-	"bikeatrent-backend/utils"
+	"bike-at-rent/utils"
 
 	"github.com/gin-gonic/gin"
 )

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"bikeatrent-backend/models"
+	"bike-at-rent/models"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"

@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"bikeatrent-backend/services"
-	"bikeatrent-backend/utils"
+	"bike-at-rent/services"
+	"bike-at-rent/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

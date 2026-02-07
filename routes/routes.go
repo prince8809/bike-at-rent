@@ -59,11 +59,14 @@ func SetupRoutes(router *gin.Engine) {
 		}
 
 		// Bike routes (to be implemented)
-		// bikes := v1.Group("/bikes")
-		// {
-		// 	bikes.GET("", bikeHandler.List)
-		// 	bikes.GET("/availability", bikeHandler.GetAvailability)
-		// }
+		// Bike routes
+		bikeRepo := repository.NewBikeRepository(database.DB)
+		bikeHandler := handlers.NewBikeHandler(bikeRepo)
+		bikes := v1.Group("/bikes")
+		{
+			bikes.GET("", bikeHandler.List)
+			bikes.GET("/availability", bikeHandler.GetAvailability)
+		}
 
 		// Locations routes (to be implemented)
 		// locations := v1.Group("/locations")

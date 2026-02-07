@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"bikeatrent-backend/models"
-	"bikeatrent-backend/utils"
+	"bike-at-rent/models"
+	"bike-at-rent/utils"
 
 	"github.com/gin-gonic/gin"
 )
