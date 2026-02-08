@@ -84,10 +84,18 @@ func (h *UserHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Assign operations_admin role to enable login
+	err = h.userRepo.AddUserRole(ctx, user.ID, "operations_admin")
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, "failed to assign user role", err)
+		return
+	}
+
 	// Return created user with profile
 	data := map[string]interface{}{
 		"user":    user,
 		"profile": profile,
+		"role":    "operations_admin",
 	}
 
 	utils.SuccessResponse(c, http.StatusCreated, "user created successfully", data)
