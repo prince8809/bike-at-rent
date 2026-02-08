@@ -2,107 +2,102 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"time"
 
 	"bike-at-rent/config"
+	"bike-at-rent/models"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var DB *pgxpool.Pool
 
-// Connect establishes a connection pool to PostgreSQL
 func Connect() error {
-	cfg := config.AppConfig
-
-	// Parse connection string and configure pool
-	poolConfig, err := pgxpool.ParseConfig(cfg.DatabaseURL)
+	cfg, err := pgxpool.ParseConfig(config.AppConfig.DatabaseURL)
 	if err != nil {
-		return fmt.Errorf("unable to parse DATABASE_URL: %w", err)
+		return err
 	}
 
-	// Configure connection pool
-	poolConfig.MaxConns = int32(cfg.DatabasePoolSize)
-	poolConfig.MinConns = int32(cfg.DatabaseMaxIdleConns)
-	poolConfig.MaxConnLifetime = cfg.DatabaseConnMaxLife
-	poolConfig.MaxConnIdleTime = 30 * time.Minute
-	poolConfig.HealthCheckPeriod = 1 * time.Minute
+	cfg.MaxConns = int32(config.AppConfig.DatabasePoolSize)
+	cfg.MinConns = int32(config.AppConfig.DatabaseMaxIdleConns)
+	cfg.MaxConnLifetime = config.AppConfig.DatabaseConnMaxLife
 
-	// Connect with retry logic
-	var pool *pgxpool.Pool
-	maxRetries := 3
-	for i := 0; i < maxRetries; i++ {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		pool, err = pgxpool.NewWithConfig(ctx, poolConfig)
-		cancel()
-
-		if err == nil {
-			// Test the connection
-			ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-			err = pool.Ping(ctx)
-			cancel()
-
-			if err == nil {
-				break
-			}
-		}
-
-		if i < maxRetries-1 {
-			waitTime := time.Duration(i+1) * 2 * time.Second
-			log.Printf("Failed to connect to database (attempt %d/%d): %v. Retrying in %v...", i+1, maxRetries, err, waitTime)
-			time.Sleep(waitTime)
-		}
-	}
-
+	DB, err = pgxpool.NewWithConfig(context.Background(), cfg)
 	if err != nil {
-		return fmt.Errorf("unable to connect to database after %d attempts: %w", maxRetries, err)
+		return err
 	}
 
-	DB = pool
-	log.Println("✓ Connected to PostgreSQL database")
-	log.Printf("✓ Connection pool configured: max_conns=%d, min_conns=%d", cfg.DatabasePoolSize, cfg.DatabaseMaxIdleConns)
+	// Ping DB
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = DB.Ping(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Seed bikes into database
+	if err := SeedBikes(ctx); err != nil {
+		log.Println("Warning: Failed to seed bikes:", err)
+	}
 
 	return nil
 }
 
-// Close gracefully closes the database connection pool
+// SeedBikes inserts bikes from JSON file into the database
+func SeedBikes(ctx context.Context) error {
+	file, err := os.Open("cmd/seed/bikes.json")
+	if err != nil {
+		return fmt.Errorf("failed to open bikes.json: %w", err)
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	bytes, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("failed to read bikes.json: %w", err)
+	}
+
+	var bikes []models.Bike
+	if err := json.Unmarshal(bytes, &bikes); err != nil {
+		return fmt.Errorf("failed to unmarshal bikes.json: %w", err)
+	}
+
+	// Insert bikes into database
+	query := `
+		INSERT INTO bikes (id, name, category, daily_price, hourly_price, security_deposit, status, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+		ON CONFLICT (id) DO NOTHING
+	`
+
+	for _, bike := range bikes {
+		_, err := DB.Exec(ctx, query,
+			bike.ID,
+			bike.Name,
+			bike.Category,
+			bike.DailyPrice,
+			bike.HourlyPrice,
+			bike.SecurityDeposit,
+			bike.Status,
+		)
+		if err != nil {
+			log.Printf("Failed to insert bike %s: %v", bike.Name, err)
+			continue
+		}
+		log.Printf("✓ Seeded bike: %s", bike.Name)
+	}
+
+	return nil
+}
+
 func Close() {
 	if DB != nil {
 		DB.Close()
-		log.Println("✓ Database connection pool closed")
-	}
-}
-
-// HealthCheck verifies database connectivity
-func HealthCheck(ctx context.Context) error {
-	if DB == nil {
-		return fmt.Errorf("database connection not initialized")
-	}
-
-	if err := DB.Ping(ctx); err != nil {
-		return fmt.Errorf("database ping failed: %w", err)
-	}
-
-	return nil
-}
-
-// GetStats returns connection pool statistics
-func GetStats() map[string]interface{} {
-	if DB == nil {
-		return map[string]interface{}{
-			"status": "not connected",
-		}
-	}
-
-	stat := DB.Stat()
-	return map[string]interface{}{
-		"total_conns":      stat.TotalConns(),
-		"acquired_conns":   stat.AcquiredConns(),
-		"idle_conns":       stat.IdleConns(),
-		"max_conns":        stat.MaxConns(),
-		"acquire_count":    stat.AcquireCount(),
-		"acquire_duration": stat.AcquireDuration().String(),
 	}
 }

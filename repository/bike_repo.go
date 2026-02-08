@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"bike-at-rent/models"
 
@@ -158,4 +159,48 @@ func (r *BikeRepository) CreateBike(ctx context.Context, bike *models.Bike) (*mo
 	}
 
 	return bike, nil
+}
+
+// GetBookingsByDateRange returns bookings that conflict with a date range
+// This helps find which bikes are already booked during the requested period
+func (r *BikeRepository) GetBookingsByDateRange(ctx context.Context, pickupDate, dropDate time.Time, locationID string) ([]models.Booking, error) {
+	bookings := []models.Booking{}
+
+	// Find all confirmed/pending bookings that overlap with the requested date range
+	query := `
+		SELECT id, booking_number, user_id, bike_id, pickup_location_id, drop_location_id,
+			pickup_datetime, drop_datetime, bike_rental_price, security_deposit, total_amount,
+			advance_paid, due_at_pickup, status, payment_status, created_at, updated_at
+		FROM bookings
+		WHERE status IN ('pending', 'confirmed')
+		AND pickup_datetime < $2
+		AND drop_datetime > $1
+	`
+
+	// Add location filter if provided
+	args := []interface{}{pickupDate, dropDate}
+	if locationID != "" {
+		query += " AND pickup_location_id = $3"
+		args = append(args, locationID)
+	}
+
+	query += " ORDER BY pickup_datetime ASC"
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query bookings by date range: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var b models.Booking
+		if err := rows.Scan(&b.ID, &b.BookingNumber, &b.UserID, &b.BikeID, &b.PickupLocationID, &b.DropLocationID,
+			&b.PickupDatetime, &b.DropDatetime, &b.BikeRentalPrice, &b.SecurityDeposit, &b.TotalAmount,
+			&b.AdvancePaid, &b.DueAtPickup, &b.Status, &b.PaymentStatus, &b.CreatedAt, &b.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan booking: %w", err)
+		}
+		bookings = append(bookings, b)
+	}
+
+	return bookings, nil
 }
