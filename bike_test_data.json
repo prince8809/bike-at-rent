@@ -1,0 +1,108 @@
+[
+  {
+    "name": "TVS Ntorq 125 (Regular)",
+    "category": "scooter",
+    "daily_price": 800,
+    "hourly_price": 160,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+  {
+    "name": "TVS Ntorq 125 (XP / XT)",
+    "category": "scooter",
+    "daily_price": 900,
+    "hourly_price": 180,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+  {
+    "name": "TVS Ntorq 125 (New Gen)",
+    "category": "scooter",
+    "daily_price": 1000,
+    "hourly_price": 200,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+
+  {
+    "name": "Royal Enfield Classic 350",
+    "category": "bike",
+    "daily_price": 1600,
+    "hourly_price": 320,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+  {
+    "name": "Royal Enfield Hunter 350",
+    "category": "bike",
+    "daily_price": 1600,
+    "hourly_price": 320,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+  {
+    "name": "Himalayan 411",
+    "category": "bike",
+    "daily_price": 1700,
+    "hourly_price": 340,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+  {
+    "name": "Xpulse 200",
+    "category": "bike",
+    "daily_price": 1400,
+    "hourly_price": 280,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+  {
+    "name": "TVS Apache RTR 160",
+    "category": "bike",
+    "daily_price": 1250,
+    "hourly_price": 250,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+  {
+    "name": "Bajaj Pulsar NS160",
+    "category": "bike",
+    "daily_price": 1250,
+    "hourly_price": 250,
+    "security_deposit": 5000,
+    "status": "active"
+  },
+
+  {
+    "name": "Jupiter 110",
+    "category": "local",
+    "daily_price": 600,
+    "hourly_price": 120,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+  {
+    "name": "Activa 125",
+    "category": "local",
+    "daily_price": 600,
+    "hourly_price": 120,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+  {
+    "name": "Radeon 110",
+    "category": "local",
+    "daily_price": 800,
+    "hourly_price": 160,
+    "security_deposit": 2000,
+    "status": "active"
+  },
+  {
+    "name": "Suzuki Access 125",
+    "category": "local",
+    "daily_price": 700,
+    "hourly_price": 140,
+    "security_deposit": 2000,
+    "status": "active"
+  }
+]
