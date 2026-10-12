@@ -91,9 +91,7 @@
           <span>New Booking</span>
         </button>
 
-        <button onclick="clearAllBookings()" title="Clear All Bookings / Fresh Start" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-300 p-1.5 sm:p-2 rounded-lg text-xs transition">
-          <i class="fa-solid fa-arrows-rotate"></i>
-        </button>
+
 
         <button onclick="logoutPortal()" title="Lock Operations Portal" class="bg-rose-950/80 hover:bg-rose-900 border border-rose-700 text-rose-300 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
           <i class="fa-solid fa-lock"></i>
@@ -1339,6 +1337,8 @@
           }, 200);
         }
         showToast('🔓 Portal Unlocked! Welcome to BikeAtRent Ops.');
+        // Immediately pull latest server bookings upon authentication
+        syncWithCloud(false);
       } else {
         if (errBox) {
           errBox.innerText = 'Incorrect passcode. Access denied.';
@@ -1389,11 +1389,9 @@
     const INITIAL_FLEET = [{"plate": "WB74BE7418", "model": "Suzuki Access 125", "variant": "Standard", "category": "Access 125", "color": "Blue", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1lR9pZ5dU7WsdyTvs4y2FQRkXkRjQuDqA/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74AL2367", "model": "Honda Activa 125", "variant": "Standard", "category": "Activa 125", "color": "Blue", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15DzRpm69UOiyYXjbI1wPETSmOOexfnbC/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74AM3343", "model": "Honda Activa 125", "variant": "Standard", "category": "Activa 125", "color": "Blue", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1c2gVMV7nDtWNWN8cH8nN7WqoXkdX3QRI/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BH9354", "model": "TVS Apache RTR 160", "variant": "2V / 4V", "category": "Apache RTR 160", "color": "Black", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/17bNftCWV0fFYzxk5eNiePPCKhAlRC_ys/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74AW3695", "model": "TVS Apache RTR 200", "variant": "4V", "category": "Apache RTR 200", "color": "Black", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1_dFLxajB6gb6zUBW4RCTafyOGuitO30Z/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BL8997", "model": "Suzuki Avenis 125", "variant": "Standard", "category": "Avenis 125", "color": "Grey", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1_NP2GR-RlCjScIbTkGebQ5Xwgw-L-fMh/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BU4169", "model": "Royal Enfield Classic 350", "variant": "Reborn", "category": "Classic 350", "color": "Red", "rate": 1600, "is_scooter": false, "city_rate": 1600, "mountain_rate": 1600, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1SF5KZEVmPqHs4bjLPk0_uwlUs7XblHCs/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74AS5626", "model": "Honda Grazia 125", "variant": "Standard", "category": "Grazia 125", "color": "Grey", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1em93pKxsq5eAbSAZ4ZjN0qnvkbQtIg1e/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB72AD0519", "model": "Royal Enfield Himalayan 411", "variant": "Standard", "category": "Himalayan 411", "color": "Blue", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1kyhT7Y2cYVFBG4fEqtTFWXB7xijssVMi/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73P9169", "model": "Royal Enfield Hunter 350", "variant": "Metro / Retro", "category": "Hunter 350", "color": "Grey", "rate": 1600, "is_scooter": false, "city_rate": 1600, "mountain_rate": 1600, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1OfldTaUo5wgFBjxOZSj2RFQC7PrRseFS/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74AH3949", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15DxRrsmGeOlBXyIf1PvdIqJIXDG4J1Az/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74AL1058", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1WJOaCxSA_9dhNm8hugGwwmdo5tXi_zzb/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BK7063", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1HPr8pxyGRsB8IFihTwTaQFPp_iR1V3Qw/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73T9504", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1hhVGgcAOVzznKAyzrLUsW3DfdMpG1xFQ/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73T9517", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "RaceRed", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/18MlJwScjXmMUrwMOcXHOHRpYf6Kupf9n/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73T9894", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/10zRN8_AHP6IlXR62ia_55NflUDgF8Pwa/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73U0304", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1NlOk_L9mUYdc2sNY8s-peoPnOwANlyPC/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BM9658", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1jUcZSp3Bta8DdL9E9_VDXddKx6OCkbjj/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BP7691", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/12Uc5tpR06rEojMcoP_eAcPf5M1yjCSI2/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB84J4070", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Hh_0PStA6C2VcXQPw3-AqhJ9Hcwk87LP/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB70S4813", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Red", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1hASxoAuzhe0QtjHhisLJCQg_DdoFsxnX/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74AX7679", "model": "TVS Ntorq 125", "variant": "Regular (BS4)", "category": "Ntorq 125 (\u20b9800)", "color": "White", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "Can offer at \u20b9700/day for >2 days on heavy negotiation", "link": "https://drive.google.com/file/d/1c7IPRnQLRGp-gF_M3UTP8sm68vcRJ9tP/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BB5945", "model": "TVS Ntorq 125", "variant": "Regular (BS4)", "category": "Ntorq 125 (\u20b9800)", "color": "White", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "Can offer at \u20b9700/day for >2 days on heavy negotiation", "link": "https://drive.google.com/file/d/1RfwMKW16EVl-lYjhWdN9LhvmBwaeItw1/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73N4206", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1pA_IebJupqvOqpNHN_w9npX7MRU4dQjq/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73N4258", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/18QFZg7Nhe4mtuifDDSUThe75tCP9HJul/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73N4402", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1bcGEqxDu55Pns6kQ4W7sL8Z_hR-cjZ84/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73N4414", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Fi2kYZX_pLJvCBbA-NMDDgVG_PFgBz7U/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73N4423", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1sgKa8KcWjbE8qNkTVURzdK2juepV1eGn/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73N4582", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1e9_QSSwgWNX1uPLDpvI1Oo4AqT3G4DUR/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB73N5291", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1FuCBmu4x9Qus25AbwpUsna4rJY5sh1D1/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73N6285", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1adLsmhyyJ4P5rkKXw4SYsrXCTmWUIDap/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB72AD4778", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1ugyvkLpy-btWYLHp45jjMVLpEx-mBHBR/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BN3586", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Grey", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XKBVLnDN6-T3-BEwcYgiq7V1CRTTg2hz/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BN6908", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Grey", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/17nITzf7bu2-iXN-Xp1ZP-vRM_i1DUUvR/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BS2077", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "PurpleAvengers", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1u-DFGLlffoHVkKm8nz4ycj8h_xGl18xB/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BS9582", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Lb_vT2fe738MbBdrARCSV2spcNFwc6tx/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BU7353", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1FVWDqVWXrZCoU-2xji19wU-tAJN-SLdd/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB66AS0989", "model": "Bajaj Pulsar N250", "variant": "Standard", "category": "Pulsar N250", "color": "Black", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1BYyShrY8h_Vb2Xk9fC3EX5q3GDkA4BUv/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB73N4468", "model": "Bajaj Pulsar NS160", "variant": "Standard", "category": "Pulsar NS160", "color": "Blue", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1cJumqZ_n_VYDXRGs7rWjZe4NBrhxSj9C/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BD5559", "model": "Royal Enfield Interceptor 650", "variant": "Standard", "category": "Interceptor 650", "color": "White", "rate": 2000, "is_scooter": false, "city_rate": 2000, "mountain_rate": 2000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XYGKTOeX97bf6aSc2Pwk9GOJE1CtvM7I/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB72AB3271", "model": "TVS Radeon 110", "variant": "Standard", "category": "Radeon 110", "color": "Red", "rate": 800, "is_scooter": false, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XgTf7b0jRlOYZB9zrJoJyIeOpP-lNpx-/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB74BM9995", "model": "Royal Enfield Scram 411", "variant": "Standard", "category": "Scram 411", "color": "Yellow", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1RD-dBUS7cuqJCC62-hAiM9sFU5_zk4md/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BQ9208", "model": "Royal Enfield Scram 411", "variant": "Standard", "category": "Scram 411", "color": "Silver", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1149DXQGHgEgAvHIynt6DZcrSuIcz171z/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB69E2267", "model": "Hero Xoom 160", "variant": "Standard", "category": "Xoom 160", "color": "Black", "rate": 1250, "is_scooter": true, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1b1NLupKYPDHBQXoDhau3jEWcObSGEt0a/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB24BG1136", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Blue", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1CpDLubO8cFkY6WjxxOL0zMCfUt4fa7dk/view?usp=sharing", "location": "Junction Store"}, {"plate": "WB72AB9617", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Red", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15it78TjpQPIZdwoFc8wNpgJyg2GTY4G0/view?usp=sharing", "location": "NJP Store"}, {"plate": "WB74BQ0489", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Red", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1HZih8iLU6iwN2LIDbV2jgjkEj7RFNSpk/view?usp=sharing", "location": "Junction Store"}];
     const INITIAL_BOOKINGS = [];
 
-    // Production Fresh Clean Slate: Purge stale test bookings from localStorage
-    const DATA_VERSION = 'v6_two_stores_cloud_sync';
+    // Production Persistent State: Always preserve existing bookings across sessions
+    const DATA_VERSION = 'v7_persistent_cloud_sync';
     if (localStorage.getItem('bar_data_version') !== DATA_VERSION) {
-      localStorage.removeItem('bar_fleet');
-      localStorage.removeItem('bar_bookings');
       localStorage.setItem('bar_data_version', DATA_VERSION);
     }
 
@@ -1417,7 +1415,7 @@
 
     // Cross-Device Cloud Sync Configuration (Real-time Persistence Across Mobile & Web)
     const CLOUD_SYNC_ENDPOINT = '/api/ops-sync';
-    const CLOUD_DIRECT_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a12f24282546ba';
+    const CLOUD_DIRECT_URL = 'https://mantledb.sh/v2/bikeatrent-siliguri-ops-v1/state';
     let isSyncing = false;
     let lastCloudSyncTime = null;
 
@@ -1448,40 +1446,64 @@
 
       try {
         let cloudData = null;
-        // Try local Vercel serverless proxy first
+        // 1. Try local Vercel serverless proxy with dynamic timestamp cache-buster
         try {
-          const resp = await fetch(CLOUD_SYNC_ENDPOINT, { cache: 'no-store' });
+          const syncUrl = CLOUD_SYNC_ENDPOINT + '?_ts=' + Date.now();
+          const resp = await fetch(syncUrl, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache'
+            }
+          });
           if (resp.ok) {
             cloudData = await resp.json();
           }
-        } catch (_) {}
+        } catch (e) {
+          console.warn('Proxy sync note:', e);
+        }
 
-        // Fallback directly to high-availability cloud storage
-        if (!cloudData || !cloudData.bookings) {
-          const directResp = await fetch(CLOUD_DIRECT_URL, { cache: 'no-store' });
-          if (directResp.ok) {
-            const raw = await directResp.json();
-            cloudData = raw.data || raw;
+        // 2. Fallback directly to MantleDB cloud storage
+        if (!cloudData || !Array.isArray(cloudData.bookings)) {
+          try {
+            const directResp = await fetch(CLOUD_DIRECT_URL + '?_ts=' + Date.now(), {
+              cache: 'no-store',
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+              }
+            });
+            if (directResp.ok) {
+              const raw = await directResp.json();
+              cloudData = raw.data || raw;
+            }
+          } catch (e) {
+            console.warn('Direct cloud sync note:', e);
           }
         }
 
         if (cloudData && Array.isArray(cloudData.bookings)) {
           let updated = false;
-          // Merge bookings safely by ID
-          const existingIds = new Set(bookings.map(x => x.id));
-          cloudData.bookings.forEach(cb => {
-            if (!existingIds.has(cb.id)) {
-              bookings.push(cb);
-              updated = true;
-            } else {
-              // Update status if changed remotely
+
+          // If local has no bookings but cloud has bookings, adopt cloud bookings completely
+          if (bookings.length === 0 && cloudData.bookings.length > 0) {
+            bookings = cloudData.bookings;
+            updated = true;
+          } else {
+            // Merge bookings safely by ID (cloud is source of truth for remote edits)
+            cloudData.bookings.forEach(cb => {
               const localIdx = bookings.findIndex(x => x.id === cb.id);
-              if (localIdx !== -1 && JSON.stringify(bookings[localIdx]) !== JSON.stringify(cb)) {
-                bookings[localIdx] = cb;
+              if (localIdx === -1) {
+                bookings.push(cb);
                 updated = true;
+              } else {
+                if (JSON.stringify(bookings[localIdx]) !== JSON.stringify(cb)) {
+                  bookings[localIdx] = cb;
+                  updated = true;
+                }
               }
-            }
-          });
+            });
+          }
 
           // Sync remote fleet locations if provided
           if (cloudData.fleet_locations && typeof cloudData.fleet_locations === 'object') {
@@ -1501,7 +1523,8 @@
             renderDashboardTable();
             renderBookingsTable();
             updateKpis();
-            if (!silent) showToast('☁️ Bookings & Fleet synced from Cloud!');
+            if (typeof renderTimeline === 'function') renderTimeline();
+            if (!silent) showToast('☁️ Synced with Cloud Server!');
           }
           lastCloudSyncTime = new Date();
           updateSyncIndicator('synced');
@@ -1509,14 +1532,14 @@
           updateSyncIndicator('synced');
         }
       } catch (err) {
-        console.warn('Cloud sync note:', err);
+        console.warn('Cloud sync error:', err);
         updateSyncIndicator('offline');
       } finally {
         isSyncing = false;
       }
     }
 
-    // Push Local Updates to Cloud (Background)
+    // Push Local Updates to Cloud (Background with fallback retry)
     async function pushStateToCloud() {
       const fleetLocMap = {};
       fleet.forEach(b => { fleetLocMap[b.plate] = b.location || 'Junction Store'; });
@@ -1528,8 +1551,9 @@
 
       try {
         updateSyncIndicator('syncing');
-        // Push to serverless proxy
         let pushed = false;
+
+        // 1. Try serverless proxy
         try {
           const resp = await fetch(CLOUD_SYNC_ENDPOINT, {
             method: 'POST',
@@ -1537,27 +1561,35 @@
             body: JSON.stringify(payload)
           });
           if (resp.ok) pushed = true;
-        } catch (_) {}
-
-        // Fallback direct cloud PUT
-        if (!pushed) {
-          await fetch(CLOUD_DIRECT_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: 'bikeatrent_ops_production_sync',
-              data: payload
-            })
-          });
+        } catch (e) {
+          console.warn('Proxy push failed:', e);
         }
-        updateSyncIndicator('synced');
+
+        // 2. Direct fallback
+        if (!pushed) {
+          try {
+            const directResp = await fetch(CLOUD_DIRECT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (directResp.ok) pushed = true;
+          } catch (e) {
+            console.warn('Direct push failed:', e);
+          }
+        }
+
+        if (pushed) {
+          updateSyncIndicator('synced');
+        } else {
+          updateSyncIndicator('offline');
+        }
       } catch (err) {
         console.warn('Push sync note:', err);
         updateSyncIndicator('offline');
       }
     }
 
-    // Save State (Offline-first localStorage + Background Cloud Sync)
     function saveState(skipCloudPush = false) {
       localStorage.setItem('bar_fleet', JSON.stringify(fleet));
       localStorage.setItem('bar_bookings', JSON.stringify(bookings));
@@ -2056,11 +2088,11 @@ Current rate: ₹${b.rate}/day
                   </button>
                 ` : ''}
                 ${st === 'Pickup Today' ? `
-                  <button onclick="openReminderModal('${bk.id}', 'voucher')" title="Pickup Voucher" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm">
-                    <i class="fa-brands fa-whatsapp"></i>
+                  <button onclick="startBookingTrip('${bk.id}')" title="Start Trip / Handover Bike" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-solid fa-play text-[10px]"></i> Start Trip
                   </button>
-                  <button onclick="openCheckInModal('${bk.id}')" title="Dispatch / Return" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm">
-                    Dispatch
+                  <button onclick="editBooking('${bk.id}')" title="Edit Booking Details" class="px-2 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-semibold shadow-sm">
+                    <i class="fa-solid fa-pen-to-square"></i>
                   </button>
                 ` : ''}
                 <button onclick="copyVideoLink('${b.link}')" title="Copy Showcase Video Link" class="p-1.5 text-slate-400 hover:text-brand-red rounded transition">
@@ -2518,15 +2550,20 @@ Current rate: ₹${b.rate}/day
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
           tr.innerHTML = `
-            <td class="py-3 px-3">
-              <span class="font-bold text-slate-800 font-mono">${b.id}</span>
+            <td class="py-3 px-3 cursor-pointer group" onclick="editBooking('${b.id}')" title="Click to Edit Booking Details">
+              <span class="font-bold text-slate-800 font-mono group-hover:text-brand-red flex items-center gap-1">
+                ${b.id} <i class="fa-solid fa-pen text-[9px] opacity-0 group-hover:opacity-100 transition"></i>
+              </span>
             </td>
-            <td class="py-3 px-3">
-              <div class="font-extrabold text-slate-900">${b.plate}</div>
+            <td class="py-3 px-3 cursor-pointer group" onclick="editBooking('${b.id}')" title="Click to Edit Booking Details">
+              <div class="font-extrabold text-slate-900 group-hover:text-brand-red">${b.plate}</div>
               <div class="text-[11px] text-slate-500">${b.model}</div>
             </td>
             <td class="py-3 px-4">
-              <div class="font-bold text-slate-800">${b.customer}</div>
+              <div class="font-bold text-slate-800 cursor-pointer hover:text-brand-red flex items-center gap-1" onclick="editBooking('${b.id}')" title="Click to Edit Customer / Phone">
+                <span>${b.customer}</span>
+                <i class="fa-solid fa-pen-to-square text-[10px] text-slate-400 hover:text-brand-red"></i>
+              </div>
               <a href="https://wa.me/${getCleanWaNumber(b)}" target="_blank" class="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1 font-medium">
                 <i class="fa-brands fa-whatsapp"></i> ${b.country_code || '+91'} ${b.phone}
               </a>
@@ -2553,7 +2590,19 @@ Current rate: ₹${b.rate}/day
               <span class="px-2 py-0.5 rounded-full text-xs font-bold ${badge}">${badgeLabel}</span>
             </td>
             <td class="py-3 px-3 text-center">
-              <div class="flex items-center justify-center space-x-1.5 flex-wrap gap-y-1">
+              <div class="flex items-center justify-center space-x-1 flex-wrap gap-y-1">
+                <!-- Start Trip button for Upcoming or Today bookings -->
+                ${(b.status === 'Upcoming' || (b.pickup_date <= today && b.status !== 'Completed' && b.status !== 'Cancelled')) ? `
+                  <button onclick="startBookingTrip('${b.id}')" title="Handover Bike / Start Trip Now" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-solid fa-play text-[9px]"></i> Start
+                  </button>
+                ` : ''}
+
+                <!-- Edit details button -->
+                <button onclick="editBooking('${b.id}')" title="Edit Customer, Phone, Dates, Rates" class="px-2 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1">
+                  <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                </button>
+
                 ${isDueToday ? `
                   <button onclick="openReminderModal('${b.id}', 'return_today')" title="Remind to return today or extend" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 animate-pulse">
                     <i class="fa-solid fa-bell"></i> Remind
@@ -2569,7 +2618,7 @@ Current rate: ₹${b.rate}/day
                   </button>
                 ` : ''}
                 ${(b.status === 'Active') ? `
-                  <button onclick="openCheckInModal('${b.id}')" title="Vehicle Return Check-In" class="px-2 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-semibold shadow-sm">
+                  <button onclick="openCheckInModal('${b.id}')" title="Vehicle Return Check-In" class="px-2 py-1 bg-indigo-700 hover:bg-indigo-800 text-white rounded text-xs font-semibold shadow-sm">
                     Return
                   </button>
                 ` : ''}
@@ -2588,16 +2637,25 @@ Current rate: ₹${b.rate}/day
           mCard.className = 'bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs space-y-2.5';
           mCard.innerHTML = `
             <div class="flex items-center justify-between">
-              <div class="flex items-center gap-1.5">
-                <span class="font-extrabold text-slate-900 font-mono text-sm">${b.id}</span>
+              <div class="flex items-center gap-1.5 cursor-pointer" onclick="editBooking('${b.id}')" title="Edit Booking">
+                <span class="font-extrabold text-slate-900 font-mono text-sm underline decoration-slate-300">${b.id}</span>
                 <span class="text-xs text-slate-500 font-semibold">• ${b.plate}</span>
+                <i class="fa-solid fa-pen text-[10px] text-slate-400"></i>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${badge}">${badgeLabel}</span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="editBooking('${b.id}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300">
+                  <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${badge}">${badgeLabel}</span>
+              </div>
             </div>
 
             <div class="flex items-center justify-between text-xs pt-0.5">
               <div>
-                <div class="font-bold text-slate-900 text-sm">${b.customer}</div>
+                <div class="font-bold text-slate-900 text-sm cursor-pointer flex items-center gap-1" onclick="editBooking('${b.id}')">
+                  <span>${b.customer}</span>
+                  <i class="fa-solid fa-pen text-[9px] text-slate-400"></i>
+                </div>
                 <a href="https://wa.me/${getCleanWaNumber(b)}" target="_blank" class="text-emerald-600 font-bold flex items-center gap-1 hover:underline">
                   <i class="fa-brands fa-whatsapp"></i> ${b.country_code || '+91'} ${b.phone}
                 </a>
@@ -2620,9 +2678,17 @@ Current rate: ₹${b.rate}/day
               </div>
             </div>
 
-            <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
-              <button onclick="openReminderModal('${b.id}')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
-                <i class="fa-brands fa-whatsapp"></i> Remind
+            <div class="flex items-center gap-1.5 pt-1 border-t border-slate-100 flex-wrap">
+              ${(b.status === 'Upcoming' || (b.pickup_date <= today && b.status !== 'Completed' && b.status !== 'Cancelled')) ? `
+                <button onclick="startBookingTrip('${b.id}')" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                  <i class="fa-solid fa-play text-[10px]"></i> Start Trip
+                </button>
+              ` : ''}
+              <button onclick="editBooking('${b.id}')" class="py-1.5 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button onclick="openReminderModal('${b.id}')" class="py-1.5 px-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-brands fa-whatsapp"></i>
               </button>
               ${(b.status === 'Active' || b.status === 'Upcoming') ? `
                 <button onclick="openExtendModal('${b.id}')" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-sm active:scale-95">
@@ -2630,7 +2696,7 @@ Current rate: ₹${b.rate}/day
                 </button>
               ` : ''}
               ${(b.status === 'Active') ? `
-                <button onclick="openCheckInModal('${b.id}')" class="flex-1 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-sm active:scale-95">
+                <button onclick="openCheckInModal('${b.id}')" class="flex-1 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg text-xs font-bold shadow-sm active:scale-95">
                   Return
                 </button>
               ` : ''}
@@ -2846,6 +2912,87 @@ Current rate: ₹${b.rate}/day
     // -------------------------------------------------------------
     // MODAL 1: ADD / EDIT BOOKING (WITH REAL-TIME CONFLICT ENGINE)
     // -------------------------------------------------------------
+        // -------------------------------------------------------------
+    // EDIT BOOKING & START TRIP ACTIONS
+    // -------------------------------------------------------------
+    function editBooking(bkId) {
+      const b = bookings.find(x => x.id === bkId);
+      if (!b) return;
+
+      document.getElementById('bookingForm').reset();
+      document.getElementById('formBookingId').value = b.id;
+      document.getElementById('modalTitle').innerText = `Edit Booking ${b.id} — ${b.customer}`;
+
+      document.getElementById('formCustomer').value = b.customer || '';
+      document.getElementById('formCountryCode').value = b.country_code || '+91';
+      document.getElementById('formPhone').value = b.phone || '';
+
+      document.getElementById('formPickupDate').value = b.pickup_date;
+      document.getElementById('formDropDate').value = b.drop_date;
+
+      if (document.getElementById('formPickupTime')) document.getElementById('formPickupTime').value = b.pickup_time || '10:00 AM';
+      if (document.getElementById('formDropTime')) document.getElementById('formDropTime').value = b.drop_time || '07:00 PM';
+      if (document.getElementById('formPickupBranch')) document.getElementById('formPickupBranch').value = b.pickup_branch || 'Junction Store';
+      if (document.getElementById('formDropBranch')) document.getElementById('formDropBranch').value = b.drop_branch || 'Junction Store';
+
+      onBookingDatesChange();
+
+      // Ensure vehicle plate exists in dropdown even if booked
+      const plateSelect = document.getElementById('formPlate');
+      if (plateSelect) {
+        let optFound = false;
+        for (let i = 0; i < plateSelect.options.length; i++) {
+          if (plateSelect.options[i].value === b.plate) { optFound = true; break; }
+        }
+        if (!optFound) {
+          const newOpt = document.createElement('option');
+          newOpt.value = b.plate;
+          newOpt.innerText = `${b.plate} — ${b.model} (Assigned)`;
+          plateSelect.appendChild(newOpt);
+        }
+        plateSelect.value = b.plate;
+        if (typeof onModalPlateChange === 'function') onModalPlateChange();
+      }
+
+      if (b.rate) document.getElementById('formRate').value = b.rate;
+      if (document.getElementById('formAuthCharge')) document.getElementById('formAuthCharge').value = b.auth_charge || 0;
+      if (document.getElementById('formExtraCharge')) document.getElementById('formExtraCharge').value = b.extra_charge || 0;
+      if (document.getElementById('formExtraNote')) document.getElementById('formExtraNote').value = b.extra_note || '';
+      if (document.getElementById('formAdvance')) document.getElementById('formAdvance').value = b.advance || 0;
+      if (document.getElementById('formDeposit')) document.getElementById('formDeposit').value = b.deposit || 'Original ID';
+      if (document.getElementById('formStatus')) document.getElementById('formStatus').value = b.status || 'Active';
+      if (document.getElementById('formDestination')) document.getElementById('formDestination').value = b.destination || '';
+
+      calculateModalTotal();
+      onCountryCodeChange();
+
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function startBookingTrip(bkId) {
+      const b = bookings.find(x => x.id === bkId);
+      if (!b) return;
+
+      if (confirm(`Start rental trip for ${b.customer} (${b.model} - ${b.plate})?
+
+This will mark the vehicle as Active (On Trip) starting today.`)) {
+        const today = getTodayISO();
+        b.status = 'Active';
+        if (b.pickup_date > today) {
+          b.pickup_date = today;
+          b.days = calculateRentalDays(b.pickup_date, b.drop_date);
+          b.total_rent = (b.days * b.rate) + (b.auth_charge || 0) + (b.extra_charge || 0);
+          b.balance = Math.max(0, b.total_rent - (b.advance || 0));
+        }
+        saveState();
+        renderDashboardTable();
+        renderBookingsTable();
+        if (typeof renderTimeline === 'function') renderTimeline();
+        updateKpis();
+        showToast(`🚀 Trip started for ${b.customer}! Vehicle ${b.plate} is now Active (On Trip).`);
+      }
+    }
+
     function openBookingModal() {
       document.getElementById('bookingForm').reset();
       document.getElementById('formBookingId').value = '';
