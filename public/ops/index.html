@@ -1442,6 +1442,124 @@
     </div>
   </div>
 
+  <!-- ============================================================== -->
+  <!-- MODAL 7: SWAP / REPLACE VEHICLE MODAL                          -->
+  <!-- ============================================================== -->
+  <div id="swapVehicleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[94vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center font-extrabold text-lg">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base sm:text-lg">Swap / Replace Vehicle</h3>
+            <p class="text-xs text-slate-500">Reassign booking to another vehicle (e.g. replace NTorq with another NTorq or any available bike).</p>
+          </div>
+        </div>
+        <button onclick="closeSwapVehicleModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold p-1 rounded-lg">&times;</button>
+      </div>
+
+      <!-- Current Booking & Vehicle Snapshot -->
+      <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+        <div class="flex justify-between items-center border-b border-slate-200/80 pb-2">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase">Booking ID</span>
+            <div id="swapBookingId" class="font-black text-slate-900 text-sm font-mono">BK-XXXX</div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 font-bold uppercase">Customer</span>
+            <div id="swapCustomer" class="font-bold text-slate-800">Customer Name</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-0.5">
+          <div>
+            <span class="text-[10px] text-slate-400 font-bold uppercase">Current Assigned Bike</span>
+            <div id="swapCurrentPlate" class="font-extrabold text-indigo-700 text-sm">WB74...</div>
+            <div id="swapCurrentModel" class="text-slate-600 font-medium">Model Name</div>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 font-bold uppercase">Rental Period</span>
+            <div id="swapDates" class="font-bold text-slate-800">2026-10-12 → 2026-10-14</div>
+            <div id="swapDays" class="text-slate-500 font-medium">3 Days · Current Rate: ₹700/d</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Replacement Vehicle Selector -->
+      <div class="space-y-1.5">
+        <label for="swapNewPlateSelect" class="block font-bold text-slate-800 text-xs flex items-center justify-between">
+          <span>Select Replacement Vehicle:</span>
+          <span id="swapAvailableCountBadge" class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Checking...</span>
+        </label>
+        <select id="swapNewPlateSelect" onchange="onSwapPlateChanged()" class="w-full border border-slate-300 rounded-xl p-3 bg-white font-medium text-xs sm:text-sm focus:ring-2 focus:ring-indigo-600 outline-none">
+          <!-- Dynamically populated via JS -->
+        </select>
+        <div id="swapVehicleConflictAlert" class="hidden p-2.5 rounded-xl bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold">
+          <!-- Conflict warning -->
+        </div>
+      </div>
+
+      <!-- Rate Policy & Financial Recalculation -->
+      <div class="bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-100 space-y-2 text-xs">
+        <div class="font-bold text-indigo-950 flex items-center justify-between">
+          <span>Pricing & Daily Rate Policy:</span>
+          <span id="swapPriceDiffBadge" class="text-[11px] font-bold text-emerald-700">No Rate Change</span>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <label class="flex items-start gap-2 p-2 rounded-xl bg-white border border-indigo-200 cursor-pointer hover:border-indigo-400 transition">
+            <input type="radio" name="swapRatePolicy" id="swapRatePolicyKeep" value="keep" checked onchange="onSwapRatePolicyChanged()" class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+            <div>
+              <div class="font-bold text-slate-900">Keep Original Rate</div>
+              <div class="text-[10px] text-slate-500">Maintain ₹<span id="swapOriginalRateVal">0</span>/day (standard for breakdown/substitutions)</div>
+            </div>
+          </label>
+          <label class="flex items-start gap-2 p-2 rounded-xl bg-white border border-indigo-200 cursor-pointer hover:border-indigo-400 transition">
+            <input type="radio" name="swapRatePolicy" id="swapRatePolicyUpdate" value="update" onchange="onSwapRatePolicyChanged()" class="mt-0.5 text-indigo-600 focus:ring-indigo-500">
+            <div>
+              <div class="font-bold text-slate-900">Apply New Bike Rate</div>
+              <div class="text-[10px] text-slate-500">Use replacement bike rate (₹<span id="swapNewRateVal">0</span>/day)</div>
+            </div>
+          </label>
+        </div>
+
+        <div id="swapRentSummaryText" class="text-[11px] text-indigo-900 font-semibold pt-1 border-t border-indigo-100/80">
+          Total Rent will remain ₹<span id="swapSummaryTotalRent">0</span>.
+        </div>
+      </div>
+
+      <!-- Swap Reason & Notes -->
+      <div class="space-y-1.5 text-xs">
+        <label for="swapReasonSelect" class="block font-bold text-slate-800">Reason for Vehicle Swap:</label>
+        <select id="swapReasonSelect" class="w-full border border-slate-300 rounded-xl p-2.5 bg-white text-xs font-medium focus:ring-2 focus:ring-indigo-600 outline-none">
+          <option value="Mechanical Breakdown / Puncture">🔧 Mechanical Breakdown / Puncture</option>
+          <option value="Same Model Replacement (Ops Allocation)">🔄 Same Model Replacement (Operational Allocation)</option>
+          <option value="Scheduled Maintenance / Service Due">⚙️ Scheduled Maintenance / Service Due</option>
+          <option value="Customer Preference / Model Upgrade">👤 Customer Preference / Model Upgrade</option>
+          <option value="Hub Rebalancing / Store Transfer">📍 Hub Rebalancing / Store Transfer</option>
+          <option value="Other / Administrative Swap">📝 Other / Administrative Swap</option>
+        </select>
+        <input type="text" id="swapRemarksInput" placeholder="Optional remarks (e.g. Swapped with spare NTorq due to rear puncture)" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-600 outline-none">
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 border-t border-slate-200 flex gap-2">
+        <button type="button" onclick="confirmSwapVehicle()" id="btnConfirmSwap" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-extrabold rounded-xl shadow-lg shadow-indigo-600/30 text-xs sm:text-sm flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Confirm Vehicle Swap</span>
+        </button>
+        <button type="button" onclick="closeSwapVehicleModal()" class="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs sm:text-sm transition">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 z-50 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none">
     <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -2307,6 +2425,9 @@ Current rate: ₹${b.rate}/day
                   <button onclick="openReminderModal('${bk.id}', '${st === 'Return Due Today' ? 'return_today' : 'mid_trip'}')" title="WhatsApp Reminder" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1">
                     <i class="fa-brands fa-whatsapp"></i> Remind
                   </button>
+                  <button onclick="openSwapVehicleModal('${bk.id}')" title="Swap / Replace Bike with Another Vehicle" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Swap
+                  </button>
                   <button onclick="openExtendModal('${bk.id}')" title="Extend Booking" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1">
                     Extend
                   </button>
@@ -2317,6 +2438,9 @@ Current rate: ₹${b.rate}/day
                 ${st === 'Pickup Today' ? `
                   <button onclick="startBookingTrip('${bk.id}')" title="Start Trip / Handover Bike" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 active:scale-95">
                     <i class="fa-solid fa-play text-[10px]"></i> Start Trip
+                  </button>
+                  <button onclick="openSwapVehicleModal('${bk.id}')" title="Swap / Replace Bike with Another Vehicle" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Swap
                   </button>
                   <button onclick="editBooking('${bk.id}')" title="Edit Booking Details" class="px-2 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-semibold shadow-sm">
                     <i class="fa-solid fa-pen-to-square"></i>
@@ -2840,6 +2964,9 @@ Current rate: ₹${b.rate}/day
                   </button>
                 `}
                 ${(b.status === 'Active' || b.status === 'Upcoming') ? `
+                  <button onclick="openSwapVehicleModal('${b.id}')" title="Swap / Replace Bike with Another Vehicle (e.g. NTorq with another NTorq)" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Swap
+                  </button>
                   <button onclick="openExtendModal('${b.id}')" title="Extend Booking" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold shadow-sm">
                     Extend
                   </button>
@@ -2918,6 +3045,9 @@ Current rate: ₹${b.rate}/day
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
               ${(b.status === 'Active' || b.status === 'Upcoming') ? `
+                <button onclick="openSwapVehicleModal('${b.id}')" class="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                  <i class="fa-solid fa-arrows-rotate"></i> Swap
+                </button>
                 <button onclick="openExtendModal('${b.id}')" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-sm active:scale-95">
                   Extend
                 </button>
@@ -3816,6 +3946,268 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
         updateKpis();
         showToast(`🚀 Trip started for ${b.customer}! Vehicle ${b.plate} is now Active (On Trip).`);
       }
+    }
+
+
+    // =============================================================
+    // MODAL 7: SWAP / REPLACE VEHICLE LOGIC & REASSIGNMENT ENGINE
+    // =============================================================
+    let currentSwapBooking = null;
+
+    function openSwapVehicleModal(bkId) {
+      const b = bookings.find(x => x.id === bkId);
+      if (!b) return;
+
+      currentSwapBooking = b;
+      const modal = document.getElementById('swapVehicleModal');
+      const select = document.getElementById('swapNewPlateSelect');
+      const conflictAlert = document.getElementById('swapVehicleConflictAlert');
+      const availableBadge = document.getElementById('swapAvailableCountBadge');
+      if (!modal || !select) return;
+
+      conflictAlert.classList.add('hidden');
+
+      // Populate snapshot
+      document.getElementById('swapBookingId').innerText = b.id;
+      document.getElementById('swapCustomer').innerText = `${b.customer}${b.phone ? ` (${b.phone})` : ''}`;
+      document.getElementById('swapCurrentPlate').innerText = b.plate;
+      document.getElementById('swapCurrentModel').innerText = b.model;
+      document.getElementById('swapDates').innerText = `${b.pickup_date} → ${b.drop_date}`;
+      document.getElementById('swapDays').innerText = `${b.days} Days · Current Rate: ₹${b.rate}/d`;
+      document.getElementById('swapOriginalRateVal').innerText = b.rate || 0;
+      document.getElementById('swapSummaryTotalRent').innerText = b.total_rent || 0;
+
+      // Reset radio policy to keep
+      const keepRadio = document.getElementById('swapRatePolicyKeep');
+      if (keepRadio) keepRadio.checked = true;
+
+      // Reset remarks and reason
+      document.getElementById('swapRemarksInput').value = '';
+      document.getElementById('swapReasonSelect').value = 'Mechanical Breakdown / Puncture';
+
+      // Calculate conflicting vehicles during this booking period (excluding current booking)
+      const conflicts = {};
+      bookings.forEach(bk => {
+        if (bk.status === 'Cancelled' || bk.status === 'Completed') return;
+        if (bk.id === b.id) return;
+        if (bk.pickup_date <= b.drop_date && bk.drop_date >= b.pickup_date) {
+          conflicts[bk.plate] = bk;
+        }
+      });
+
+      // Divide fleet into direct model substitutes (e.g. other NTorqs) and other available bikes
+      const directMatches = [];
+      const otherAvailable = [];
+
+      fleet.forEach(f => {
+        if (f.plate === b.plate) return; // Skip currently assigned vehicle
+        if (conflicts[f.plate]) return;  // Skip booked vehicles
+
+        if (f.model.toLowerCase() === b.model.toLowerCase()) {
+          directMatches.push(f);
+        } else {
+          otherAvailable.push(f);
+        }
+      });
+
+      const totalAvailable = directMatches.length + otherAvailable.length;
+      availableBadge.innerText = `${totalAvailable} Vehicles Free`;
+
+      // Build Select HTML with Optgroups
+      let html = '<option value="">-- Choose Replacement Vehicle --</option>';
+
+      if (directMatches.length > 0) {
+        html += `<optgroup label="🌟 Same Model Substitutes (${directMatches.length} Units Available)">`;
+        directMatches.forEach(f => {
+          const storeTag = f.location === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn';
+          html += `<option value="${f.plate}">[${storeTag}] ${f.plate} — ${f.model} (${f.color}) · ₹${f.rate}/d</option>`;
+        });
+        html += '</optgroup>';
+      }
+
+      if (otherAvailable.length > 0) {
+        html += `<optgroup label="✅ Other Available Fleet Units (${otherAvailable.length} Units)">`;
+        otherAvailable.forEach(f => {
+          const storeTag = f.location === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn';
+          html += `<option value="${f.plate}">[${storeTag}] ${f.plate} — ${f.model} (${f.color}) · ₹${f.rate}/d</option>`;
+        });
+        html += '</optgroup>';
+      }
+
+      if (totalAvailable === 0) {
+        html = '<option value="" disabled>⛔ No alternative vehicles free for this date range!</option>';
+      }
+
+      select.innerHTML = html;
+
+      // Auto-select first direct model substitute or first available
+      if (directMatches.length > 0) {
+        select.value = directMatches[0].plate;
+      } else if (otherAvailable.length > 0) {
+        select.value = otherAvailable[0].plate;
+      }
+
+      onSwapPlateChanged();
+      modal.classList.remove('hidden');
+    }
+
+    function closeSwapVehicleModal() {
+      const modal = document.getElementById('swapVehicleModal');
+      if (modal) modal.classList.add('hidden');
+      currentSwapBooking = null;
+    }
+
+    function onSwapPlateChanged() {
+      if (!currentSwapBooking) return;
+      const select = document.getElementById('swapNewPlateSelect');
+      const newPlate = select.value;
+      const newBike = fleet.find(x => x.plate === newPlate);
+
+      if (newBike) {
+        document.getElementById('swapNewRateVal').innerText = newBike.rate;
+      } else {
+        document.getElementById('swapNewRateVal').innerText = '0';
+      }
+
+      onSwapRatePolicyChanged();
+    }
+
+    function onSwapRatePolicyChanged() {
+      if (!currentSwapBooking) return;
+      const b = currentSwapBooking;
+      const select = document.getElementById('swapNewPlateSelect');
+      const newPlate = select.value;
+      const newBike = fleet.find(x => x.plate === newPlate);
+      const isKeep = document.getElementById('swapRatePolicyKeep')?.checked;
+      const diffBadge = document.getElementById('swapPriceDiffBadge');
+      const summaryText = document.getElementById('swapRentSummaryText');
+      const confirmBtn = document.getElementById('btnConfirmSwap');
+
+      if (!newBike) {
+        diffBadge.innerText = 'Select a vehicle';
+        diffBadge.className = 'text-[11px] font-bold text-slate-500';
+        summaryText.innerHTML = 'Please choose an available replacement vehicle from the dropdown above.';
+        confirmBtn.disabled = true;
+        return;
+      }
+
+      confirmBtn.disabled = false;
+
+      const currentTotal = b.total_rent || 0;
+      const days = b.days || 1;
+      const auth = b.auth_charge || 0;
+      const extra = b.extra_charge || 0;
+
+      if (isKeep) {
+        diffBadge.innerText = 'No Rate Change';
+        diffBadge.className = 'text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
+        summaryText.innerHTML = `Total Rent will remain <strong class="text-indigo-950 font-black">₹${currentTotal}</strong> (Keeping original contract rate ₹${b.rate}/d).`;
+      } else {
+        const newRate = newBike.rate;
+        const newBase = days * newRate;
+        const newTotal = newBase + auth + extra;
+        const diff = newTotal - currentTotal;
+
+        if (diff === 0) {
+          diffBadge.innerText = 'Identical Rate (₹0 diff)';
+          diffBadge.className = 'text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200';
+          summaryText.innerHTML = `Total Rent remains identical at <strong class="text-indigo-950 font-black">₹${newTotal}</strong> (₹${newRate}/d).`;
+        } else if (diff > 0) {
+          diffBadge.innerText = `+₹${diff} Rate Increase`;
+          diffBadge.className = 'text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200';
+          summaryText.innerHTML = `New Total Rent will be <strong class="text-amber-900 font-black">₹${newTotal}</strong> (<span class="text-amber-800 font-bold">+₹${diff}</span> difference at ₹${newRate}/d).`;
+        } else {
+          diffBadge.innerText = `-₹${Math.abs(diff)} Rate Reduction`;
+          diffBadge.className = 'text-[11px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200';
+          summaryText.innerHTML = `New Total Rent will be <strong class="text-sky-900 font-black">₹${newTotal}</strong> (<span class="text-sky-800 font-bold">-₹${Math.abs(diff)}</span> difference at ₹${newRate}/d).`;
+        }
+      }
+    }
+
+    function confirmSwapVehicle() {
+      if (!currentSwapBooking) return;
+      const b = currentSwapBooking;
+      const select = document.getElementById('swapNewPlateSelect');
+      const newPlate = select ? select.value : '';
+
+      if (!newPlate) {
+        alert('Please select an available replacement vehicle!');
+        return;
+      }
+
+      if (newPlate === b.plate) {
+        alert('Selected vehicle is identical to current vehicle! Please select a different replacement vehicle.');
+        return;
+      }
+
+      const newBike = fleet.find(x => x.plate === newPlate);
+      if (!newBike) {
+        alert('Invalid replacement vehicle selected!');
+        return;
+      }
+
+      // Final Conflict Assertion (Ensure no double booking)
+      const conflict = bookings.find(bk =>
+        bk.plate === newPlate &&
+        bk.id !== b.id &&
+        bk.status !== 'Cancelled' &&
+        bk.status !== 'Completed' &&
+        bk.pickup_date <= b.drop_date &&
+        bk.drop_date >= b.pickup_date
+      );
+
+      if (conflict) {
+        alert(`⛔ CONFLICT PREVENTED! Vehicle ${newPlate} is already booked by ${conflict.customer} from ${conflict.pickup_date} to ${conflict.drop_date}.`);
+        return;
+      }
+
+      const oldPlate = b.plate;
+      const oldModel = b.model;
+      const oldBike = fleet.find(x => x.plate === oldPlate);
+      const today = getTodayISO();
+      const reason = document.getElementById('swapReasonSelect')?.value || 'Operational Swap';
+      const remarks = document.getElementById('swapRemarksInput')?.value.trim() || '';
+
+      const isUpdateRate = document.getElementById('swapRatePolicyUpdate')?.checked;
+      let rateLog = '';
+
+      if (isUpdateRate && newBike.rate !== b.rate) {
+        const oldRate = b.rate;
+        const days = b.days || 1;
+        const auth = b.auth_charge || 0;
+        const extra = b.extra_charge || 0;
+        b.rate = newBike.rate;
+        b.base_rent = days * b.rate;
+        b.total_rent = b.base_rent + auth + extra;
+        b.balance = Math.max(0, b.total_rent - (b.advance || 0));
+        rateLog = ` [Rate updated from ₹${oldRate}/d to ₹${b.rate}/d, New Total: ₹${b.total_rent}]`;
+      }
+
+      // Reassign booking vehicle
+      b.plate = newBike.plate;
+      b.model = newBike.model;
+
+      // Transfer vehicle location if active trip
+      if (b.status === 'Active' && oldBike && oldBike.location) {
+        newBike.location = oldBike.location;
+      }
+
+      // Append audit note
+      const swapLog = `Swapped from ${oldPlate} (${oldModel}) to ${newPlate} (${newBike.model}) on ${today}. Reason: ${reason}${remarks ? ` (${remarks})` : ''}${rateLog}.`;
+      b.notes = b.notes ? `${b.notes} • ${swapLog}` : swapLog;
+
+      // Save and Cloud Sync
+      saveState();
+      closeSwapVehicleModal();
+
+      showToast(`🔁 Swapped vehicle to ${newPlate} (${newBike.model}) for ${b.customer}!`);
+
+      // Re-render all views
+      renderDashboardTable();
+      renderBookingsTable();
+      if (typeof renderCompletedBookingsTable === 'function') renderCompletedBookingsTable();
+      if (typeof renderTimeline === 'function') renderTimeline();
+      updateKpis();
     }
 
     function openBookingModal() {
