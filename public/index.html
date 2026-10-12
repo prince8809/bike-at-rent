@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BikeAtRent — Fleet Operations & Dispatch Portal</title>
+  <link rel="icon" type="image/png" href="https://bikeatrent.com/favicon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              red: '#E63946',
+              dark: '#1D3557',
+              navy: '#0F2137',
+              teal: '#457B9D',
+              light: '#F1FAEE',
+              gray: '#F8FAFC'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .badge-pv { background-color: #FEF3C7; color: #92400E; border: 1px solid #FCD34D; }
+    .badge-comm { background-color: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+    .status-free { background-color: #DCFCE7; color: #166534; }
+    .status-trip { background-color: #FEE2E2; color: #991B1B; }
+    .status-due { background-color: #FEF9C3; color: #854D0E; }
+    .status-pickup { background-color: #E0E7FF; color: #3730A3; }
+    .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Top App Navigation -->
+  <header class="bg-brand-navy text-white sticky top-0 z-50 shadow-lg border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-brand-red flex items-center justify-center font-extrabold text-white text-xl shadow-md">
+          <i class="fa-solid fa-motorcycle"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight">BikeAtRent</span>
+            <span class="text-xs bg-brand-red/30 text-rose-300 px-2 py-0.5 rounded-full font-semibold border border-rose-500/30">OPERATIONS PORTAL</span>
+          </div>
+          <p class="text-xs text-slate-400">Siliguri Fleet Dispatch & Availability Manager</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="openBookingModal()" class="bg-brand-red hover:bg-rose-700 text-white font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-plus"></i>
+          <span>New Booking</span>
+        </button>
+        <button onclick="switchTab('availTab')" class="bg-brand-teal hover:bg-sky-700 text-white font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <span>Check Dates</span>
+        </button>
+        <button onclick="exportDataBackup()" title="Download Backup" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-sm transition">
+          <i class="fa-solid fa-download"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Sub Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-800/80 flex overflow-x-auto space-x-1 py-1 text-xs sm:text-sm font-medium">
+      <button onclick="switchTab('dashTab')" id="btn-dashTab" class="tab-btn px-4 py-2 rounded-lg text-white bg-slate-800 font-semibold flex items-center space-x-2">
+        <i class="fa-solid fa-table-cells-large text-brand-red"></i>
+        <span>Live Status Board (<span id="totalFleetCount">47</span>)</span>
+      </button>
+      <button onclick="switchTab('availTab')" id="btn-availTab" class="tab-btn px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-2">
+        <i class="fa-solid fa-calendar-check text-sky-400"></i>
+        <span>Instant Availability Checker</span>
+      </button>
+      <button onclick="switchTab('bookingsTab')" id="btn-bookingsTab" class="tab-btn px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-2">
+        <i class="fa-solid fa-clipboard-list text-amber-400"></i>
+        <span>Bookings Log (<span id="totalBookingsCount">0</span>)</span>
+      </button>
+      <button onclick="switchTab('timelineTab')" id="btn-timelineTab" class="tab-btn px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-2">
+        <i class="fa-solid fa-timeline text-emerald-400"></i>
+        <span>30-Day Dispatch Matrix</span>
+      </button>
+      <button onclick="switchTab('rulesTab')" id="btn-rulesTab" class="tab-btn px-4 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-2">
+        <i class="fa-solid fa-book text-purple-400"></i>
+        <span>Pricing & Negotiation Rules</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: LIVE STATUS BOARD                                       -->
+    <!-- ============================================================== -->
+    <div id="dashTab" class="tab-content space-y-6">
+      
+      <!-- Metrics Strip -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        
+        <div onclick="filterDashboardStatus('ALL')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-slate-400 transition">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Active Fleet</div>
+          <div class="text-2xl font-extrabold text-slate-900 mt-1" id="kpiTotal">47</div>
+          <div class="text-xs text-slate-400 mt-0.5">Customer ready units</div>
+        </div>
+
+        <div onclick="filterDashboardStatus('Available In Shop')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-emerald-200 hover:border-emerald-400 bg-emerald-50/20 transition">
+          <div class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">🟢 Available In Shop</div>
+          <div class="text-2xl font-extrabold text-emerald-700 mt-1" id="kpiFree">0</div>
+          <div class="text-xs text-emerald-600 mt-0.5">Free for walk-in/call</div>
+        </div>
+
+        <div onclick="filterDashboardStatus('On Trip')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-rose-200 hover:border-rose-400 bg-rose-50/20 transition">
+          <div class="text-xs font-semibold text-rose-700 uppercase tracking-wider">🔴 On Trip (Rented)</div>
+          <div class="text-2xl font-extrabold text-rose-700 mt-1" id="kpiTrip">0</div>
+          <div class="text-xs text-rose-600 mt-0.5">Currently with customer</div>
+        </div>
+
+        <div onclick="filterDashboardStatus('Return Due Today')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-amber-200 hover:border-amber-400 bg-amber-50/20 transition">
+          <div class="text-xs font-semibold text-amber-700 uppercase tracking-wider">🟡 Due Return Today</div>
+          <div class="text-2xl font-extrabold text-amber-700 mt-1" id="kpiDue">0</div>
+          <div class="text-xs text-amber-600 mt-0.5">Inspect & deposit refund</div>
+        </div>
+
+        <div onclick="filterDashboardStatus('Pickup Today')" class="cursor-pointer bg-white p-4 rounded-xl shadow-sm border border-indigo-200 hover:border-indigo-400 bg-indigo-50/20 transition">
+          <div class="text-xs font-semibold text-indigo-700 uppercase tracking-wider">🔵 Pickup Today</div>
+          <div class="text-2xl font-extrabold text-indigo-700 mt-1" id="kpiPickup">0</div>
+          <div class="text-xs text-indigo-600 mt-0.5">Wash & prepare helmets</div>
+        </div>
+
+      </div>
+
+      <!-- Live Search & Filters -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div class="relative w-full md:w-96">
+          <i class="fa-solid fa-search absolute left-3 top-3 text-slate-400"></i>
+          <input type="text" id="dashSearchInput" onkeyup="renderDashboardTable()" placeholder="Search plate (WB74...), model, color, or customer..." class="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-red focus:border-brand-red outline-none">
+        </div>
+
+        <div class="flex items-center space-x-2 w-full md:w-auto overflow-x-auto">
+          <select id="dashModelFilter" onchange="renderDashboardTable()" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-700 outline-none">
+            <option value="ALL">All Models</option>
+            <option value="Ntorq">TVS Ntorq 125</option>
+            <option value="Xpulse">Hero Xpulse 200</option>
+            <option value="Classic">Royal Enfield Classic</option>
+            <option value="Hunter">Royal Enfield Hunter</option>
+            <option value="Himalayan">Royal Enfield Himalayan</option>
+            <option value="Scram">Royal Enfield Scram 411</option>
+            <option value="Activa">Honda Activa 125</option>
+            <option value="Jupiter">TVS Jupiter 110</option>
+            <option value="Access">Suzuki Access 125</option>
+            <option value="Avenis">Suzuki Avenis 125</option>
+          </select>
+
+          <select id="dashStatusFilter" onchange="renderDashboardTable()" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-3 py-2 bg-white text-slate-700 outline-none">
+            <option value="ALL">All Statuses</option>
+            <option value="Available In Shop">Available In Shop</option>
+            <option value="On Trip">On Trip</option>
+            <option value="Return Due Today">Return Due Today</option>
+            <option value="Pickup Today">Pickup Today</option>
+          </select>
+
+          <button onclick="resetDashFilters()" class="text-xs text-slate-500 hover:text-slate-800 px-2 py-2">Reset</button>
+        </div>
+      </div>
+
+      <!-- Fleet Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3 text-center">#</th>
+                <th class="py-3 px-3">Plate & Type</th>
+                <th class="py-3 px-4">Bike Model & Variant</th>
+                <th class="py-3 px-3">Color</th>
+                <th class="py-3 px-3">Daily Rate</th>
+                <th class="py-3 px-3 text-center">Current Status</th>
+                <th class="py-3 px-3">Customer Details</th>
+                <th class="py-3 px-3">Return Due</th>
+                <th class="py-3 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="dashTableBody" class="divide-y divide-slate-100 font-medium">
+              <!-- Rendered via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: INSTANT AVAILABILITY CHECKER                            -->
+    <!-- ============================================================== -->
+    <div id="availTab" class="tab-content hidden space-y-6">
+      
+      <!-- Date Selector Box -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center space-x-2">
+            <i class="fa-solid fa-calendar-check text-brand-red"></i>
+            <span>Test Date-Range Availability (Booking Decision Engine)</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Pick customer dates to instantly verify which bikes are free without scheduling conflicts.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Pickup (Start) Date</label>
+            <input type="date" id="availStartDate" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Return (End) Date</label>
+            <input type="date" id="availEndDate" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Filter by Model Category</label>
+            <select id="availCategoryFilter" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-700 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+              <option value="ALL">All Fleet Categories (47)</option>
+              <option value="Ntorq 125 (₹800)">Ntorq 125 Regular (₹800/day)</option>
+              <option value="Ntorq 125 (₹900)">Ntorq 125 Race XP/XT (₹900/day)</option>
+              <option value="Ntorq 125 (₹1,000)">Ntorq 125 New Gen (₹1,000/day)</option>
+              <option value="Xpulse 200">Hero Xpulse 200 4V (₹1,400/day)</option>
+              <option value="Classic 350">Royal Enfield Classic 350 (₹1,600/day)</option>
+              <option value="Hunter 350">Royal Enfield Hunter 350 (₹1,600/day)</option>
+              <option value="Himalayan 411">Royal Enfield Himalayan 411 (₹1,700/day)</option>
+              <option value="Scram 411">Royal Enfield Scram 411 (₹1,700/day)</option>
+              <option value="Activa 125">Honda Activa 125 (₹600/day)</option>
+              <option value="Jupiter 110">TVS Jupiter 110 (₹600 - ₹700/day)</option>
+              <option value="Access 125">Suzuki Access 125 (₹700/day)</option>
+              <option value="Avenis 125">Suzuki Avenis 125 (₹700/day)</option>
+              <option value="Grazia 125">Honda Grazia 125 (₹700/day)</option>
+              <option value="Apache RTR 160">TVS Apache RTR 160 (₹1,250/day)</option>
+              <option value="Apache RTR 200">TVS Apache RTR 200 4V (₹1,250/day)</option>
+              <option value="Pulsar NS160">Bajaj Pulsar NS160 (₹1,250/day)</option>
+              <option value="Pulsar N250">Bajaj Pulsar N250 (₹1,400/day)</option>
+              <option value="Interceptor 650">RE Interceptor 650 (₹2,000/day)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Rental Type</label>
+            <select id="availTripType" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-700 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+              <option value="city">Local Siliguri City Ride</option>
+              <option value="mountain">Mountain / Hills Ride (+₹100 for scooters)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Big Decision Result Banner -->
+        <div id="decisionBanner" class="p-4 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-3 transition">
+          <!-- Filled via JS -->
+        </div>
+
+      </div>
+
+      <!-- Free Bikes Card Grid -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-slate-800 text-sm sm:text-base">
+            Matching Vehicles (<span id="availMatchCount">0</span> Available)
+          </h3>
+          <span class="text-xs text-slate-500">Click video to copy link or Book Now to lock slot</span>
+        </div>
+
+        <div id="availBikesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: BOOKINGS LOG & DISPATCH                                 -->
+    <!-- ============================================================== -->
+    <div id="bookingsTab" class="tab-content hidden space-y-6">
+      
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Master Bookings Log</h2>
+          <p class="text-xs text-slate-500">Track all customer reservations, advances, deposits, and returns.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="openBookingModal()" class="bg-brand-red hover:bg-rose-700 text-white font-semibold text-xs sm:text-sm px-4 py-2 rounded-lg shadow flex items-center space-x-1.5 transition">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add New Booking</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 font-bold uppercase text-[11px] tracking-wider border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-3">Booking ID</th>
+                <th class="py-3 px-3">Vehicle Plate</th>
+                <th class="py-3 px-4">Customer Name & Phone</th>
+                <th class="py-3 px-3">Dates (Pickup → Drop)</th>
+                <th class="py-3 px-2 text-center">Days</th>
+                <th class="py-3 px-3 text-right">Rent</th>
+                <th class="py-3 px-3 text-right">Advance / Due</th>
+                <th class="py-3 px-3">Security Deposit</th>
+                <th class="py-3 px-3 text-center">Status</th>
+                <th class="py-3 px-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsTableBody" class="divide-y divide-slate-100 font-medium">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: 30-DAY TIMELINE GANTT                                   -->
+    <!-- ============================================================== -->
+    <div id="timelineTab" class="tab-content hidden space-y-4">
+      
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">30-Day Fleet Dispatch Matrix</h2>
+          <p class="text-xs text-slate-500">Visual calendar of all 47 bikes. Red cells indicate booked days.</p>
+        </div>
+        <div class="flex items-center space-x-3 text-xs font-semibold">
+          <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-emerald-400 inline-block"></span><span>Free / Available</span></span>
+          <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span><span>Booked</span></span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto custom-scroll p-2" id="timelineContainer">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: PRICING & NEGOTIATION RULES                             -->
+    <!-- ============================================================== -->
+    <div id="rulesTab" class="tab-content hidden space-y-6">
+      
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900 flex items-center space-x-2">
+            <i class="fa-solid fa-book-bookmark text-brand-red"></i>
+            <span>Operational Pricing & Negotiation SOP for Staff</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-1">Ground policies for quoting rates, hill trip surcharges, and negotiation thresholds.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          <div class="border border-amber-200 bg-amber-50/40 p-4 rounded-xl space-y-2">
+            <h3 class="font-bold text-amber-900 text-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-mountain text-amber-600"></i>
+              <span>Scooter Mountain / Outstation Rule (+₹100/day)</span>
+            </h3>
+            <p class="text-xs text-amber-900/80 leading-relaxed">
+              For commuter scooters (<strong>Activa 125, Jupiter 110, Access 125, Avenis 125, Grazia 125</strong>):
+            </p>
+            <ul class="text-xs space-y-1 text-amber-900/90 list-disc list-inside">
+              <li><strong>Local Siliguri Ride:</strong> Quoted at base rate (₹600 or ₹700/day).</li>
+              <li><strong>Mountain Ride (Darjeeling, Sikkim, Mirik, Kurseong):</strong> Mandatory <strong>+₹100/day extra</strong> (₹700 or ₹800/day) to cover engine wear & hill maintenance.</li>
+            </ul>
+          </div>
+
+          <div class="border border-blue-200 bg-blue-50/40 p-4 rounded-xl space-y-2">
+            <h3 class="font-bold text-blue-900 text-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-handshake text-blue-600"></i>
+              <span>Ntorq Regular BS4 Negotiation Rule (₹700/day)</span>
+            </h3>
+            <p class="text-xs text-blue-900/80 leading-relaxed">
+              Standard rate for all 7 Regular Ntorq units is <strong>₹800/day</strong>.
+            </p>
+            <ul class="text-xs space-y-1 text-blue-900/90 list-disc list-inside">
+              <li>Only for the 2 BS4 units (<strong>WB74AX7679</strong> & <strong>WB74BB5945</strong>):</li>
+              <li>On <strong>heavy customer negotiation</strong>, staff is authorized to offer <strong>₹700/day</strong>, strictly for bookings <strong>longer than 2 days (>2 days)</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="border border-emerald-200 bg-emerald-50/40 p-4 rounded-xl space-y-2">
+            <h3 class="font-bold text-emerald-900 text-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+              <span>Plate Type Compliance Protocol</span>
+            </h3>
+            <ul class="text-xs space-y-1 text-emerald-900/90 list-disc list-inside">
+              <li>5 units carry verified <strong>Commercial</strong> plates.</li>
+              <li>Remaining 42 units must be addressed as <strong>"Under conversion process"</strong>.</li>
+              <li><strong>NEVER</strong> use the word "Private" when speaking or messaging with customers.</li>
+            </ul>
+          </div>
+
+          <div class="border border-purple-200 bg-purple-50/40 p-4 rounded-xl space-y-2">
+            <h3 class="font-bold text-purple-900 text-sm flex items-center space-x-1.5">
+              <i class="fa-solid fa-video text-purple-600"></i>
+              <span>WhatsApp Showcase Video Sending Rule</span>
+            </h3>
+            <ul class="text-xs space-y-1 text-purple-900/90 list-disc list-inside">
+              <li>All 47 vehicles have dedicated <strong>under-30-second HD showcase clips</strong>.</li>
+              <li>When customer asks for videos of a model (e.g. "Xpulse ka video bhejo"), staff/bot sends <strong>all available videos</strong> for that model.</li>
+              <li>Include disclaimer: <em>"Exact bike/color choice is subject to availability at pickup; an available vehicle from this model will be allocated."</em></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: ADD / EDIT BOOKING                                      -->
+  <!-- ============================================================== -->
+  <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto space-y-4">
+      
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center space-x-2">
+          <i class="fa-solid fa-calendar-plus text-brand-red"></i>
+          <span id="modalTitle">New Customer Booking & Dispatch</span>
+        </h3>
+        <button onclick="closeBookingModal()" class="text-slate-400 hover:text-slate-700 text-lg">&times;</button>
+      </div>
+
+      <form id="bookingForm" onsubmit="saveBooking(event)" class="space-y-4 text-xs sm:text-sm">
+        
+        <input type="hidden" id="formBookingId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Select Vehicle (Plate)</label>
+            <select id="formPlate" onchange="onModalPlateChange()" required class="w-full border border-slate-300 rounded-lg p-2.5 bg-white font-medium focus:ring-2 focus:ring-brand-red outline-none">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Daily Rate (₹)</label>
+            <input type="number" id="formRate" onchange="calculateModalTotal()" required class="w-full border border-slate-300 rounded-lg p-2.5 font-medium bg-slate-50 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Customer Full Name</label>
+            <input type="text" id="formCustomer" required placeholder="e.g. Rahul Sharma" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Customer WhatsApp / Phone</label>
+            <input type="tel" id="formPhone" required placeholder="10-digit number" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Pickup (Start) Date</label>
+            <input type="date" id="formPickupDate" onchange="calculateModalTotal()" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Drop (Return) Date</label>
+            <input type="date" id="formDropDate" onchange="calculateModalTotal()" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Total Days</label>
+            <input type="number" id="formDays" readonly class="w-full font-bold text-slate-800 bg-transparent text-center p-1">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Total Rent (₹)</label>
+            <input type="number" id="formTotalRent" readonly class="w-full font-extrabold text-brand-red bg-transparent text-center p-1 text-base">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Advance Paid (₹)</label>
+            <input type="number" id="formAdvance" onchange="calculateModalTotal()" value="0" class="w-full font-semibold border border-slate-300 rounded p-1 text-center bg-white">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Security Deposit / ID Proof</label>
+            <input type="text" id="formDeposit" placeholder="e.g. ₹3,000 + Original DL" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Booking Status</label>
+            <select id="formStatus" class="w-full border border-slate-300 rounded-lg p-2.5 bg-white font-medium focus:ring-2 focus:ring-brand-red outline-none">
+              <option value="Active">Active (On Trip)</option>
+              <option value="Upcoming">Upcoming (Advance Received)</option>
+              <option value="Completed">Completed (Returned)</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Trip Destination / Remarks</label>
+          <input type="text" id="formDestination" placeholder="e.g. Darjeeling & Mirik, 2 helmets given" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+        </div>
+
+        <div class="flex items-center justify-end space-x-3 pt-3 border-t">
+          <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-100 font-medium transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-brand-red hover:bg-rose-700 text-white rounded-lg font-bold shadow transition">Save Booking</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 z-50 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMsg">Action completed</span>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    const INITIAL_FLEET = [{"plate": "WB74BE7418", "model": "Suzuki Access 125", "variant": "Standard", "category": "Access 125", "color": "Blue", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1lR9pZ5dU7WsdyTvs4y2FQRkXkRjQuDqA/view?usp=sharing"}, {"plate": "WB74AL2367", "model": "Honda Activa 125", "variant": "Standard", "category": "Activa 125", "color": "Blue", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15DzRpm69UOiyYXjbI1wPETSmOOexfnbC/view?usp=sharing"}, {"plate": "WB74AM3343", "model": "Honda Activa 125", "variant": "Standard", "category": "Activa 125", "color": "Blue", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1c2gVMV7nDtWNWN8cH8nN7WqoXkdX3QRI/view?usp=sharing"}, {"plate": "WB74BH9354", "model": "TVS Apache RTR 160", "variant": "2V / 4V", "category": "Apache RTR 160", "color": "Black", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/17bNftCWV0fFYzxk5eNiePPCKhAlRC_ys/view?usp=sharing"}, {"plate": "WB74AW3695", "model": "TVS Apache RTR 200", "variant": "4V", "category": "Apache RTR 200", "color": "Black", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1_dFLxajB6gb6zUBW4RCTafyOGuitO30Z/view?usp=sharing"}, {"plate": "WB74BL8997", "model": "Suzuki Avenis 125", "variant": "Standard", "category": "Avenis 125", "color": "Grey", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1_NP2GR-RlCjScIbTkGebQ5Xwgw-L-fMh/view?usp=sharing"}, {"plate": "WB74BU4169", "model": "Royal Enfield Classic 350", "variant": "Reborn", "category": "Classic 350", "color": "Red", "rate": 1600, "is_scooter": false, "city_rate": 1600, "mountain_rate": 1600, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1SF5KZEVmPqHs4bjLPk0_uwlUs7XblHCs/view?usp=sharing"}, {"plate": "WB74AS5626", "model": "Honda Grazia 125", "variant": "Standard", "category": "Grazia 125", "color": "Grey", "rate": 700, "is_scooter": true, "city_rate": 700, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1em93pKxsq5eAbSAZ4ZjN0qnvkbQtIg1e/view?usp=sharing"}, {"plate": "WB72AD0519", "model": "Royal Enfield Himalayan 411", "variant": "Standard", "category": "Himalayan 411", "color": "Blue", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1kyhT7Y2cYVFBG4fEqtTFWXB7xijssVMi/view?usp=sharing"}, {"plate": "WB73P9169", "model": "Royal Enfield Hunter 350", "variant": "Metro / Retro", "category": "Hunter 350", "color": "Grey", "rate": 1600, "is_scooter": false, "city_rate": 1600, "mountain_rate": 1600, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1OfldTaUo5wgFBjxOZSj2RFQC7PrRseFS/view?usp=sharing"}, {"plate": "WB74AH3949", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15DxRrsmGeOlBXyIf1PvdIqJIXDG4J1Az/view?usp=sharing"}, {"plate": "WB74AL1058", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1WJOaCxSA_9dhNm8hugGwwmdo5tXi_zzb/view?usp=sharing"}, {"plate": "WB74BK7063", "model": "TVS Jupiter 110", "variant": "Standard", "category": "Jupiter 110", "color": "Grey", "rate": 600, "is_scooter": true, "city_rate": 600, "mountain_rate": 700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1HPr8pxyGRsB8IFihTwTaQFPp_iR1V3Qw/view?usp=sharing"}, {"plate": "WB73T9504", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1hhVGgcAOVzznKAyzrLUsW3DfdMpG1xFQ/view?usp=sharing"}, {"plate": "WB73T9517", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "RaceRed", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/18MlJwScjXmMUrwMOcXHOHRpYf6Kupf9n/view?usp=sharing"}, {"plate": "WB73T9894", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/10zRN8_AHP6IlXR62ia_55NflUDgF8Pwa/view?usp=sharing"}, {"plate": "WB73U0304", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Grey", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1NlOk_L9mUYdc2sNY8s-peoPnOwANlyPC/view?usp=sharing"}, {"plate": "WB74BM9658", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1jUcZSp3Bta8DdL9E9_VDXddKx6OCkbjj/view?usp=sharing"}, {"plate": "WB74BP7691", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/12Uc5tpR06rEojMcoP_eAcPf5M1yjCSI2/view?usp=sharing"}, {"plate": "WB84J4070", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Hh_0PStA6C2VcXQPw3-AqhJ9Hcwk87LP/view?usp=sharing"}, {"plate": "WB70S4813", "model": "TVS Ntorq 125", "variant": "New Gen", "category": "Ntorq 125 (\u20b91,000)", "color": "Red", "rate": 1000, "is_scooter": true, "city_rate": 1000, "mountain_rate": 1000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1hASxoAuzhe0QtjHhisLJCQg_DdoFsxnX/view?usp=sharing"}, {"plate": "WB74AX7679", "model": "TVS Ntorq 125", "variant": "Regular (BS4)", "category": "Ntorq 125 (\u20b9800)", "color": "White", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "Can offer at \u20b9700/day for >2 days on heavy negotiation", "link": "https://drive.google.com/file/d/1c7IPRnQLRGp-gF_M3UTP8sm68vcRJ9tP/view?usp=sharing"}, {"plate": "WB74BB5945", "model": "TVS Ntorq 125", "variant": "Regular (BS4)", "category": "Ntorq 125 (\u20b9800)", "color": "White", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "Can offer at \u20b9700/day for >2 days on heavy negotiation", "link": "https://drive.google.com/file/d/1RfwMKW16EVl-lYjhWdN9LhvmBwaeItw1/view?usp=sharing"}, {"plate": "WB73N4206", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1pA_IebJupqvOqpNHN_w9npX7MRU4dQjq/view?usp=sharing"}, {"plate": "WB73N4258", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/18QFZg7Nhe4mtuifDDSUThe75tCP9HJul/view?usp=sharing"}, {"plate": "WB73N4402", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1bcGEqxDu55Pns6kQ4W7sL8Z_hR-cjZ84/view?usp=sharing"}, {"plate": "WB73N4414", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Fi2kYZX_pLJvCBbA-NMDDgVG_PFgBz7U/view?usp=sharing"}, {"plate": "WB73N4423", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1sgKa8KcWjbE8qNkTVURzdK2juepV1eGn/view?usp=sharing"}, {"plate": "WB73N4582", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1e9_QSSwgWNX1uPLDpvI1Oo4AqT3G4DUR/view?usp=sharing"}, {"plate": "WB73N5291", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Grey", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1FuCBmu4x9Qus25AbwpUsna4rJY5sh1D1/view?usp=sharing"}, {"plate": "WB73N6285", "model": "TVS Ntorq 125", "variant": "Regular (BS6)", "category": "Ntorq 125 (\u20b9800)", "color": "Blue", "rate": 800, "is_scooter": true, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1adLsmhyyJ4P5rkKXw4SYsrXCTmWUIDap/view?usp=sharing"}, {"plate": "WB72AD4778", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1ugyvkLpy-btWYLHp45jjMVLpEx-mBHBR/view?usp=sharing"}, {"plate": "WB74BN3586", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Grey", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XKBVLnDN6-T3-BEwcYgiq7V1CRTTg2hz/view?usp=sharing"}, {"plate": "WB74BN6908", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Grey", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/17nITzf7bu2-iXN-Xp1ZP-vRM_i1DUUvR/view?usp=sharing"}, {"plate": "WB74BS2077", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "PurpleAvengers", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1u-DFGLlffoHVkKm8nz4ycj8h_xGl18xB/view?usp=sharing"}, {"plate": "WB74BS9582", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1Lb_vT2fe738MbBdrARCSV2spcNFwc6tx/view?usp=sharing"}, {"plate": "WB74BU7353", "model": "TVS Ntorq 125", "variant": "Race XP / XT", "category": "Ntorq 125 (\u20b9900)", "color": "Red", "rate": 900, "is_scooter": true, "city_rate": 900, "mountain_rate": 900, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1FVWDqVWXrZCoU-2xji19wU-tAJN-SLdd/view?usp=sharing"}, {"plate": "WB66AS0989", "model": "Bajaj Pulsar N250", "variant": "Standard", "category": "Pulsar N250", "color": "Black", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1BYyShrY8h_Vb2Xk9fC3EX5q3GDkA4BUv/view?usp=sharing"}, {"plate": "WB73N4468", "model": "Bajaj Pulsar NS160", "variant": "Standard", "category": "Pulsar NS160", "color": "Blue", "rate": 1250, "is_scooter": false, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1cJumqZ_n_VYDXRGs7rWjZe4NBrhxSj9C/view?usp=sharing"}, {"plate": "WB74BD5559", "model": "Royal Enfield Interceptor 650", "variant": "Standard", "category": "Interceptor 650", "color": "White", "rate": 2000, "is_scooter": false, "city_rate": 2000, "mountain_rate": 2000, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XYGKTOeX97bf6aSc2Pwk9GOJE1CtvM7I/view?usp=sharing"}, {"plate": "WB72AB3271", "model": "TVS Radeon 110", "variant": "Standard", "category": "Radeon 110", "color": "Red", "rate": 800, "is_scooter": false, "city_rate": 800, "mountain_rate": 800, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1XgTf7b0jRlOYZB9zrJoJyIeOpP-lNpx-/view?usp=sharing"}, {"plate": "WB74BM9995", "model": "Royal Enfield Scram 411", "variant": "Standard", "category": "Scram 411", "color": "Yellow", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1RD-dBUS7cuqJCC62-hAiM9sFU5_zk4md/view?usp=sharing"}, {"plate": "WB74BQ9208", "model": "Royal Enfield Scram 411", "variant": "Standard", "category": "Scram 411", "color": "Silver", "rate": 1700, "is_scooter": false, "city_rate": 1700, "mountain_rate": 1700, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1149DXQGHgEgAvHIynt6DZcrSuIcz171z/view?usp=sharing"}, {"plate": "WB69E2267", "model": "Hero Xoom 160", "variant": "Standard", "category": "Xoom 160", "color": "Black", "rate": 1250, "is_scooter": true, "city_rate": 1250, "mountain_rate": 1250, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1b1NLupKYPDHBQXoDhau3jEWcObSGEt0a/view?usp=sharing"}, {"plate": "WB24BG1136", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Blue", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Commercial", "negotiable_note": "", "link": "https://drive.google.com/file/d/1CpDLubO8cFkY6WjxxOL0zMCfUt4fa7dk/view?usp=sharing"}, {"plate": "WB72AB9617", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Red", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/15it78TjpQPIZdwoFc8wNpgJyg2GTY4G0/view?usp=sharing"}, {"plate": "WB74BQ0489", "model": "Hero Xpulse 200", "variant": "200 4V", "category": "Xpulse 200", "color": "Red", "rate": 1400, "is_scooter": false, "city_rate": 1400, "mountain_rate": 1400, "plate_type": "Under conversion process", "negotiable_note": "", "link": "https://drive.google.com/file/d/1HZih8iLU6iwN2LIDbV2jgjkEj7RFNSpk/view?usp=sharing"}];
+    const INITIAL_BOOKINGS = [{"id": "BK-1001", "plate": "WB74BH9354", "model": "TVS Apache RTR 160", "customer": "Rahul Sharma", "phone": "9832011223", "city": "Kolkata", "pickup_date": "2026-10-11", "pickup_time": "10:00 AM", "drop_date": "2026-10-14", "drop_time": "07:00 PM", "days": 3, "rate": 1250, "total_rent": 3750, "advance": 2000, "balance": 1750, "deposit": "\u20b93,000 + Original DL", "helmets": 2, "status": "Active", "destination": "Darjeeling & Mirik"}, {"id": "BK-1002", "plate": "WB24BG1136", "model": "Hero Xpulse 200", "customer": "Amitav Sen", "phone": "9434055667", "city": "Delhi", "pickup_date": "2026-10-12", "pickup_time": "09:30 AM", "drop_date": "2026-10-15", "drop_time": "08:00 PM", "days": 4, "rate": 1400, "total_rent": 5600, "advance": 3000, "balance": 2600, "deposit": "\u20b95,000 + Aadhar Card", "helmets": 2, "status": "Active", "destination": "North Sikkim & Lachung"}, {"id": "BK-1003", "plate": "WB74AX7679", "model": "TVS Ntorq 125", "customer": "Suman Roy", "phone": "7001234567", "city": "Siliguri Local", "pickup_date": "2026-10-10", "pickup_time": "11:00 AM", "drop_date": "2026-10-12", "drop_time": "06:00 PM", "days": 2, "rate": 800, "total_rent": 1600, "advance": 1600, "balance": 0, "deposit": "Voter Card held", "helmets": 1, "status": "Active", "destination": "Local city commute (Due Today)"}, {"id": "BK-1004", "plate": "WB74BU4169", "model": "Royal Enfield Classic 350", "customer": "Vikram Rathore", "phone": "9811223344", "city": "Mumbai", "pickup_date": "2026-10-13", "pickup_time": "09:00 AM", "drop_date": "2026-10-15", "drop_time": "07:00 PM", "days": 3, "rate": 1600, "total_rent": 4800, "advance": 2000, "balance": 2800, "deposit": "\u20b95,000 + Passport Copy", "helmets": 2, "status": "Upcoming", "destination": "Kalimpong & Lava Tour"}, {"id": "BK-1005", "plate": "WB74BM9658", "model": "TVS Ntorq 125", "customer": "Priya Das", "phone": "8900112233", "city": "Assam", "pickup_date": "2026-10-14", "pickup_time": "10:00 AM", "drop_date": "2026-10-15", "drop_time": "08:00 PM", "days": 2, "rate": 800, "total_rent": 1600, "advance": 1000, "balance": 600, "deposit": "College ID", "helmets": 1, "status": "Upcoming", "destination": "Kurseong Day Trip"}];
+
+    // Load from LocalStorage or Fallback
+    let fleet = JSON.parse(localStorage.getItem('bar_fleet')) || INITIAL_FLEET;
+    let bookings = JSON.parse(localStorage.getItem('bar_bookings')) || INITIAL_BOOKINGS;
+
+    function saveState() {
+      localStorage.setItem('bar_fleet', JSON.stringify(fleet));
+      localStorage.setItem('bar_bookings', JSON.stringify(bookings));
+      updateKpis();
+    }
+
+    // Get today's ISO string (YYYY-MM-DD)
+    const getTodayISO = () => new Date().toISOString().split('T')[0];
+
+    // Compute Live Status of a Bike for Today
+    function getBikeStatusToday(plate) {
+      const today = getTodayISO();
+      // Find active or upcoming booking matching today
+      const activeBooking = bookings.find(b => 
+        b.plate === plate && 
+        b.status === 'Active' &&
+        b.pickup_date <= today && 
+        b.drop_date >= today
+      );
+
+      if (activeBooking) {
+        if (activeBooking.drop_date === today) {
+          return { status: 'Return Due Today', booking: activeBooking };
+        }
+        return { status: 'On Trip', booking: activeBooking };
+      }
+
+      const upcomingToday = bookings.find(b =>
+        b.plate === plate &&
+        b.status === 'Upcoming' &&
+        b.pickup_date === today
+      );
+
+      if (upcomingToday) {
+        return { status: 'Pickup Today', booking: upcomingToday };
+      }
+
+      return { status: 'Available In Shop', booking: null };
+    }
+
+    // Update KPI Counters
+    function updateKpis() {
+      document.getElementById('totalFleetCount').innerText = fleet.length;
+      document.getElementById('totalBookingsCount').innerText = bookings.filter(b => b.status !== 'Cancelled').length;
+      document.getElementById('kpiTotal').innerText = fleet.length;
+
+      let free = 0, trip = 0, due = 0, pickup = 0;
+      fleet.forEach(b => {
+        const st = getBikeStatusToday(b.plate).status;
+        if (st === 'Available In Shop') free++;
+        else if (st === 'On Trip') trip++;
+        else if (st === 'Return Due Today') due++;
+        else if (st === 'Pickup Today') pickup++;
+      });
+
+      document.getElementById('kpiFree').innerText = free;
+      document.getElementById('kpiTrip').innerText = trip;
+      document.getElementById('kpiDue').innerText = due;
+      document.getElementById('kpiPickup').innerText = pickup;
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-slate-800', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+      document.getElementById('btn-' + tabId).classList.add('bg-slate-800', 'text-white');
+      document.getElementById('btn-' + tabId).classList.remove('text-slate-400');
+
+      if (tabId === 'dashTab') renderDashboardTable();
+      if (tabId === 'availTab') runAvailabilityCheck();
+      if (tabId === 'bookingsTab') renderBookingsTable();
+      if (tabId === 'timelineTab') renderTimeline();
+    }
+
+    // -------------------------------------------------------------
+    // RENDER: DASHBOARD TABLE
+    // -------------------------------------------------------------
+    let currentStatusFilter = 'ALL';
+    function filterDashboardStatus(st) {
+      currentStatusFilter = st;
+      document.getElementById('dashStatusFilter').value = st;
+      renderDashboardTable();
+    }
+
+    function resetDashFilters() {
+      document.getElementById('dashSearchInput').value = '';
+      document.getElementById('dashModelFilter').value = 'ALL';
+      document.getElementById('dashStatusFilter').value = 'ALL';
+      currentStatusFilter = 'ALL';
+      renderDashboardTable();
+    }
+
+    function renderDashboardTable() {
+      const search = document.getElementById('dashSearchInput').value.toLowerCase();
+      const modelF = document.getElementById('dashModelFilter').value;
+      const statusF = document.getElementById('dashStatusFilter').value;
+      const tbody = document.getElementById('dashTableBody');
+      tbody.innerHTML = '';
+
+      fleet.forEach((b, idx) => {
+        const liveInfo = getBikeStatusToday(b.plate);
+        const st = liveInfo.status;
+        const bk = liveInfo.booking;
+
+        // Apply filters
+        if (statusF !== 'ALL' && st !== statusF) return;
+        if (modelF !== 'ALL' && !b.model.toLowerCase().includes(modelF.toLowerCase())) return;
+        if (search) {
+          const match = b.plate.toLowerCase().includes(search) || 
+                        b.model.toLowerCase().includes(search) || 
+                        b.color.toLowerCase().includes(search) ||
+                        (bk && bk.customer.toLowerCase().includes(search));
+          if (!match) return;
+        }
+
+        let badgeClass = 'status-free';
+        if (st === 'On Trip') badgeClass = 'status-trip';
+        if (st === 'Return Due Today') badgeClass = 'status-due';
+        if (st === 'Pickup Today') badgeClass = 'status-pickup';
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 text-center text-slate-400 font-bold">${idx + 1}</td>
+          <td class="py-3 px-3">
+            <div class="font-extrabold text-slate-900 tracking-wide">${b.plate}</div>
+            <span class="inline-block px-1.5 py-0.5 text-[10px] rounded font-semibold ${b.plate_type === 'Commercial' ? 'badge-comm' : 'badge-pv'}">
+              ${b.plate_type === 'Commercial' ? 'Commercial' : 'Under Conversion'}
+            </span>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-900">${b.model}</div>
+            <div class="text-xs text-slate-500">${b.variant !== 'Standard' ? b.variant : ''}</div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="inline-flex items-center gap-1.5 text-xs text-slate-700">
+              <span class="w-2.5 h-2.5 rounded-full border border-slate-300 inline-block" style="background-color: ${getColorHex(b.color)}"></span>
+              ${b.color}
+            </span>
+          </td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-800">₹${b.rate}/day</div>
+            ${b.is_scooter ? `<div class="text-[10px] text-amber-700">Hills: ₹${b.mountain_rate}</div>` : ''}
+          </td>
+          <td class="py-3 px-3 text-center">
+            <span class="inline-block px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">
+              ${st}
+            </span>
+          </td>
+          <td class="py-3 px-3">
+            ${bk ? `
+              <div class="font-bold text-slate-800">${bk.customer}</div>
+              <a href="https://wa.me/91${bk.phone}" target="_blank" class="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                <i class="fa-brands fa-whatsapp"></i> ${bk.phone}
+              </a>
+            ` : '<span class="text-slate-400">-</span>'}
+          </td>
+          <td class="py-3 px-3 text-xs">
+            ${bk ? `<span class="font-semibold text-slate-700">${bk.drop_date}</span>` : '<span class="text-slate-400">-</span>'}
+          </td>
+          <td class="py-3 px-3 text-center">
+            <div class="flex items-center justify-center space-x-1.5">
+              ${st === 'Available In Shop' ? `
+                <button onclick="prefillBookingForPlate('${b.plate}')" title="Direct Dispatch" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold">
+                  Book
+                </button>
+              ` : ''}
+              ${st === 'On Trip' || st === 'Return Due Today' ? `
+                <button onclick="quickCompleteBooking('${bk.id}')" title="Mark as Returned" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-xs font-semibold">
+                  Check-In
+                </button>
+              ` : ''}
+              <button onclick="copyVideoLink('${b.link}')" title="Copy Showcase Video Link" class="p-1.5 text-slate-400 hover:text-brand-red rounded transition">
+                <i class="fa-solid fa-video"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getColorHex(colorName) {
+      const map = {
+        'Blue': '#2563EB',
+        'Red': '#DC2626',
+        'RaceRed': '#E11D48',
+        'Black': '#1E293B',
+        'Grey': '#64748B',
+        'White': '#F8FAFC',
+        'Yellow': '#EAB308',
+        'Silver': '#94A3B8',
+        'Purple': '#9333EA',
+        'PurpleAvengers': '#7E22CE'
+      };
+      return map[colorName] || '#CBD5E1';
+    }
+
+    // -------------------------------------------------------------
+    // RENDER: AVAILABILITY ENGINE
+    // -------------------------------------------------------------
+    function runAvailabilityCheck() {
+      const start = document.getElementById('availStartDate').value;
+      const end = document.getElementById('availEndDate').value;
+      const cat = document.getElementById('availCategoryFilter').value;
+      const tripType = document.getElementById('availTripType').value;
+      const banner = document.getElementById('decisionBanner');
+      const grid = document.getElementById('availBikesGrid');
+
+      if (!start || !end) return;
+
+      if (start > end) {
+        banner.className = 'p-4 rounded-xl border border-rose-300 bg-rose-50 text-rose-800 font-bold';
+        banner.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i> Pickup date must be on or before drop date!';
+        grid.innerHTML = '';
+        return;
+      }
+
+      // Calculate days
+      const d1 = new Date(start);
+      const d2 = new Date(end);
+      const diffDays = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+
+      // Find conflicting plates
+      const bookedPlates = new Set();
+      bookings.forEach(b => {
+        if (b.status === 'Cancelled') return;
+        // Overlap condition: BookingStart <= TargetEnd AND BookingEnd >= TargetStart
+        if (b.pickup_date <= end && b.drop_date >= start) {
+          bookedPlates.add(b.plate);
+        }
+      });
+
+      // Filter available bikes
+      const availableBikes = fleet.filter(b => {
+        if (bookedPlates.has(b.plate)) return false;
+        if (cat !== 'ALL' && b.category !== cat) return false;
+        return true;
+      });
+
+      document.getElementById('availMatchCount').innerText = availableBikes.length;
+
+      // Update Decision Banner
+      if (availableBikes.length > 0) {
+        banner.className = 'p-4 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm';
+        banner.innerHTML = `
+          <div>
+            <div class="text-base font-extrabold flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+              <span>ACCEPT BOOKING — ${availableBikes.length} VEHICLES AVAILABLE</span>
+            </div>
+            <div class="text-xs text-emerald-700 mt-0.5">
+              Available from ${start} to ${end} (${diffDays} ${diffDays === 1 ? 'day' : 'days'}). You can confidently take the advance payment!
+            </div>
+          </div>
+          <button onclick="openBookingWithDates('${start}', '${end}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow transition whitespace-nowrap">
+            + Quick Book One Now
+          </button>
+        `;
+      } else {
+        banner.className = 'p-4 rounded-xl border border-rose-300 bg-rose-50 text-rose-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm';
+        banner.innerHTML = `
+          <div>
+            <div class="text-base font-extrabold flex items-center gap-2">
+              <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
+              <span>REJECT OR OFFER ALTERNATIVE — 0 VEHICLES AVAILABLE</span>
+            </div>
+            <div class="text-xs text-rose-700 mt-0.5">
+              All vehicles matching '${cat}' are already booked for these dates. Do NOT accept advance. Suggest alternative model.
+            </div>
+          </div>
+        `;
+      }
+
+      // Populate Cards
+      grid.innerHTML = '';
+      availableBikes.forEach(b => {
+        const ratePerDay = (tripType === 'mountain' && b.is_scooter) ? b.mountain_rate : b.rate;
+        const totalEst = ratePerDay * diffDays;
+
+        const card = document.createElement('div');
+        card.className = 'bg-white p-4 rounded-xl border border-slate-200 hover:border-brand-red/50 shadow-sm transition space-y-3';
+        card.innerHTML = `
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="font-bold text-slate-900 text-base">${b.model}</div>
+              <div class="text-xs text-slate-500">${b.variant !== 'Standard' ? b.variant : ''}</div>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[11px] font-extrabold tracking-wider bg-slate-100 border border-slate-200 text-slate-800">
+              ${b.plate}
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs py-1 border-y border-slate-100">
+            <span class="text-slate-500">Color: <strong>${b.color}</strong></span>
+            <span class="text-slate-500">Type: <strong>${b.plate_type === 'Commercial' ? 'Commercial' : 'Under Conversion'}</strong></span>
+          </div>
+
+          <div class="flex items-baseline justify-between">
+            <div>
+              <span class="text-xs text-slate-500">Daily:</span>
+              <span class="font-extrabold text-slate-900 text-sm">₹${ratePerDay}/day</span>
+              ${tripType === 'mountain' && b.is_scooter ? '<span class="text-[10px] text-amber-600 font-bold block">(Hills Rate Applied)</span>' : ''}
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-500">Total ${diffDays}d:</span>
+              <span class="font-extrabold text-brand-red text-base">₹${totalEst}</span>
+            </div>
+          </div>
+
+          ${b.negotiable_note ? `
+            <div class="text-[11px] bg-blue-50 text-blue-800 p-2 rounded-lg border border-blue-200">
+              💡 ${b.negotiable_note}
+            </div>
+          ` : ''}
+
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="copyVideoLink('${b.link}')" class="flex-1 py-1.5 border border-slate-300 hover:border-brand-red text-slate-700 hover:text-brand-red rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-copy"></i>
+              <span>Video Link</span>
+            </button>
+            <button onclick="prefillBookingForPlate('${b.plate}', '${start}', '${end}')" class="flex-1 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-check"></i>
+              <span>Book Bike</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // RENDER: BOOKINGS TABLE
+    // -------------------------------------------------------------
+    function renderBookingsTable() {
+      const tbody = document.getElementById('bookingsTableBody');
+      tbody.innerHTML = '';
+
+      bookings.slice().reverse().forEach(b => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+        let badge = 'bg-emerald-100 text-emerald-800';
+        if (b.status === 'Upcoming') badge = 'bg-blue-100 text-blue-800';
+        if (b.status === 'Completed') badge = 'bg-slate-100 text-slate-700';
+        if (b.status === 'Cancelled') badge = 'bg-rose-100 text-rose-800';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-bold text-slate-700">${b.id}</td>
+          <td class="py-3 px-3">
+            <div class="font-extrabold text-slate-900">${b.plate}</div>
+            <div class="text-[11px] text-slate-500">${b.model}</div>
+          </td>
+          <td class="py-3 px-4">
+            <div class="font-bold text-slate-800">${b.customer}</div>
+            <a href="https://wa.me/91${b.phone}" target="_blank" class="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+              <i class="fa-brands fa-whatsapp"></i> ${b.phone}
+            </a>
+          </td>
+          <td class="py-3 px-3 text-xs">
+            <span class="font-semibold text-slate-800">${b.pickup_date}</span> → 
+            <span class="font-semibold text-slate-800">${b.drop_date}</span>
+          </td>
+          <td class="py-3 px-2 text-center font-bold">${b.days}</td>
+          <td class="py-3 px-3 text-right font-bold text-slate-800">₹${b.total_rent}</td>
+          <td class="py-3 px-3 text-right">
+            <div class="text-emerald-700 font-semibold">Adv: ₹${b.advance}</div>
+            <div class="text-xs ${b.balance > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">Due: ₹${b.balance}</div>
+          </td>
+          <td class="py-3 px-3 text-xs text-slate-600">${b.deposit || '-'}</td>
+          <td class="py-3 px-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-xs font-bold ${badge}">${b.status}</span>
+          </td>
+          <td class="py-3 px-3 text-center">
+            <div class="flex items-center justify-center space-x-1">
+              <button onclick="shareWhatsAppVoucher('${b.id}')" title="Send WhatsApp Voucher" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded">
+                <i class="fa-brands fa-whatsapp"></i>
+              </button>
+              ${b.status !== 'Completed' && b.status !== 'Cancelled' ? `
+                <button onclick="quickCompleteBooking('${b.id}')" title="Complete/Return" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded">
+                  <i class="fa-solid fa-flag-checkered"></i>
+                </button>
+              ` : ''}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // RENDER: 30-DAY TIMELINE GANTT
+    // -------------------------------------------------------------
+    function renderTimeline() {
+      const container = document.getElementById('timelineContainer');
+      const dates = [];
+      const now = new Date();
+
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() + i);
+        dates.push(d.toISOString().split('T')[0]);
+      }
+
+      let html = '<table class="w-full text-left text-xs border-collapse">';
+      html += '<thead><tr class="bg-brand-navy text-white">';
+      html += '<th class="p-2 border border-slate-700 w-32 sticky left-0 bg-brand-navy z-20">Plate</th>';
+      html += '<th class="p-2 border border-slate-700 w-44">Model</th>';
+
+      dates.forEach(dt => {
+        const [y, m, d] = dt.split('-');
+        html += `<th class="p-1 border border-slate-700 text-center text-[10px] w-9 font-mono">${d}/${m}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      fleet.forEach((b, idx) => {
+        html += `<tr class="hover:bg-slate-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">`;
+        html += `<td class="p-2 border border-slate-200 font-extrabold text-slate-800 sticky left-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'} z-10">${b.plate}</td>`;
+        html += `<td class="p-2 border border-slate-200 font-medium text-slate-600 text-xs truncate max-w-[150px]">${b.model}</td>`;
+
+        dates.forEach(dt => {
+          const isBooked = bookings.some(bk => 
+            bk.status !== 'Cancelled' &&
+            bk.plate === b.plate &&
+            bk.pickup_date <= dt &&
+            bk.drop_date >= dt
+          );
+
+          if (isBooked) {
+            html += `<td class="p-1 border border-slate-200 text-center bg-rose-500 text-white font-bold text-[9px]" title="Booked on ${dt}">●</td>`;
+          } else {
+            html += `<td class="p-1 border border-slate-200 text-center bg-emerald-50 hover:bg-emerald-200 cursor-pointer" onclick="openBookingForDate('${b.plate}', '${dt}')" title="Available on ${dt}"></td>`;
+          }
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // -------------------------------------------------------------
+    // BOOKING MODAL ACTIONS
+    // -------------------------------------------------------------
+    function openBookingModal() {
+      document.getElementById('bookingForm').reset();
+      document.getElementById('formBookingId').value = '';
+      document.getElementById('modalTitle').innerText = 'New Customer Booking & Dispatch';
+
+      // Populate plate dropdown
+      const sel = document.getElementById('formPlate');
+      sel.innerHTML = '<option value="">-- Choose Vehicle --</option>';
+      fleet.forEach(b => {
+        sel.innerHTML += `<option value="${b.plate}">${b.plate} — ${b.model} (${b.color})</option>`;
+      });
+
+      document.getElementById('formPickupDate').value = getTodayISO();
+      document.getElementById('formDropDate').value = getTodayISO();
+      calculateModalTotal();
+
+      document.getElementById('bookingModal').classList.remove('hidden');
+    }
+
+    function closeBookingModal() {
+      document.getElementById('bookingModal').classList.add('hidden');
+    }
+
+    function onModalPlateChange() {
+      const p = document.getElementById('formPlate').value;
+      const b = fleet.find(x => x.plate === p);
+      if (b) {
+        document.getElementById('formRate').value = b.rate;
+        calculateModalTotal();
+      }
+    }
+
+    function calculateModalTotal() {
+      const start = document.getElementById('formPickupDate').value;
+      const end = document.getElementById('formDropDate').value;
+      const rate = parseFloat(document.getElementById('formRate').value) || 0;
+      const adv = parseFloat(document.getElementById('formAdvance').value) || 0;
+
+      if (!start || !end) return;
+
+      const d1 = new Date(start);
+      const d2 = new Date(end);
+      const days = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+      const total = days * rate;
+
+      document.getElementById('formDays').value = days;
+      document.getElementById('formTotalRent').value = total;
+    }
+
+    function prefillBookingForPlate(plate, start, end) {
+      openBookingModal();
+      document.getElementById('formPlate').value = plate;
+      onModalPlateChange();
+      if (start) document.getElementById('formPickupDate').value = start;
+      if (end) document.getElementById('formDropDate').value = end;
+      calculateModalTotal();
+    }
+
+    function saveBooking(e) {
+      e.preventDefault();
+      const p = document.getElementById('formPlate').value;
+      const b = fleet.find(x => x.plate === p);
+      const days = parseInt(document.getElementById('formDays').value) || 1;
+      const total = parseFloat(document.getElementById('formTotalRent').value) || 0;
+      const adv = parseFloat(document.getElementById('formAdvance').value) || 0;
+
+      const newBk = {
+        id: 'BK-' + (1000 + bookings.length + 1),
+        plate: p,
+        model: b ? b.model : '',
+        customer: document.getElementById('formCustomer').value,
+        phone: document.getElementById('formPhone').value,
+        city: 'Siliguri',
+        pickup_date: document.getElementById('formPickupDate').value,
+        pickup_time: '10:00 AM',
+        drop_date: document.getElementById('formDropDate').value,
+        drop_time: '07:00 PM',
+        days: days,
+        rate: parseFloat(document.getElementById('formRate').value),
+        total_rent: total,
+        advance: adv,
+        balance: Math.max(0, total - adv),
+        deposit: document.getElementById('formDeposit').value,
+        helmets: 1,
+        status: document.getElementById('formStatus').value,
+        destination: document.getElementById('formDestination').value
+      };
+
+      bookings.push(newBk);
+      saveState();
+      closeBookingModal();
+      showToast('Booking ' + newBk.id + ' saved successfully!');
+      renderDashboardTable();
+    }
+
+    function quickCompleteBooking(bkId) {
+      const b = bookings.find(x => x.id === bkId);
+      if (b && confirm('Mark booking ' + b.id + ' (' + b.customer + ') as Returned / Completed?')) {
+        b.status = 'Completed';
+        saveState();
+        showToast('Vehicle ' + b.plate + ' returned to Available In Shop!');
+        renderDashboardTable();
+      }
+    }
+
+    // Copy Google Drive Link
+    function copyVideoLink(link) {
+      if (!link) {
+        alert('No link available');
+        return;
+      }
+      navigator.clipboard.writeText(link).then(() => {
+        showToast('Showcase video link copied to clipboard!');
+      }).catch(() => {
+        prompt('Copy Video Link:', link);
+      });
+    }
+
+    // Share WhatsApp Voucher
+    function shareWhatsAppVoucher(bkId) {
+      const b = bookings.find(x => x.id === bkId);
+      if (!b) return;
+      const text = `*BIKE AT RENT — BOOKING CONFIRMATION*%0A%0A` +
+                   `Booking ID: *${b.id}*%0A` +
+                   `Customer: *${b.customer}*%0A` +
+                   `Vehicle: *${b.model} (${b.plate})*%0A` +
+                   `Pickup: *${b.pickup_date}*%0A` +
+                   `Return: *${b.drop_date}* (${b.days} Days)%0A` +
+                   `Total Rent: *₹${b.total_rent}*%0A` +
+                   `Advance Paid: *₹${b.advance}*%0A` +
+                   `Balance at Pickup: *₹${b.balance}*%0A` +
+                   `Security Deposit: *${b.deposit}*%0A%0A` +
+                   `Shop Address: Siliguri (Near Junction / NJP)%0A` +
+                   `Helpline / WhatsApp: +91-9832011223%0A` +
+                   `Ride Safe & Enjoy the Mountains! 🏍️`;
+      window.open(`https://wa.me/91${b.phone}?text=${text}`, '_blank');
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      el.classList.remove('translate-y-24', 'opacity-0');
+      setTimeout(() => el.classList.add('translate-y-24', 'opacity-0'), 3000);
+    }
+
+    function exportDataBackup() {
+      const data = { fleet, bookings };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bikeatrent_backup_${getTodayISO()}.json`;
+      a.click();
+    }
+
+    // Initialize Default Dates
+    window.onload = function() {
+      const td = getTodayISO();
+      const in2 = new Date();
+      in2.setDate(in2.getDate() + 2);
+
+      document.getElementById('availStartDate').value = td;
+      document.getElementById('availEndDate').value = in2.toISOString().split('T')[0];
+
+      updateKpis();
+      renderDashboardTable();
+    };
+  </script>
+
+</body>
+</html>

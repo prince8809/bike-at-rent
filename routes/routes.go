@@ -37,6 +37,11 @@ func SetupRoutes(router *gin.Engine) {
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(gin.Recovery())
 
+	// -------------------- Static Operations Dashboard --------------------
+	router.StaticFile("/ops", "./public/fleet_ops.html")
+	router.StaticFile("/fleet-ops", "./public/fleet_ops.html")
+	router.Static("/public", "./public")
+
 	// -------------------- Root --------------------
 	router.GET("/", healthHandler.Welcome)
 
