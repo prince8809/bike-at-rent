@@ -1086,9 +1086,14 @@
           <input type="text" id="formDestination" placeholder="e.g. Darjeeling & Mirik, 2 helmets given" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
         </div>
 
-        <div class="flex items-center justify-end space-x-3 pt-3 border-t">
-          <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-100 font-medium transition">Cancel</button>
-          <button type="submit" id="btnSaveBooking" class="px-5 py-2 bg-brand-red hover:bg-rose-700 text-white rounded-lg font-bold shadow transition">Save Booking</button>
+        <div class="flex items-center justify-between pt-3 border-t">
+          <button type="button" id="btnDeleteInModal" onclick="deleteCurrentModalBooking()" class="hidden px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-trash text-rose-500"></i> Delete Booking
+          </button>
+          <div class="flex items-center space-x-2 ml-auto">
+            <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-100 font-medium transition text-xs sm:text-sm">Cancel</button>
+            <button type="submit" id="btnSaveBooking" class="px-5 py-2 bg-brand-red hover:bg-rose-700 text-white rounded-lg font-bold shadow transition text-xs sm:text-sm">Save Booking</button>
+          </div>
         </div>
 
       </form>
@@ -1442,6 +1447,9 @@
         </button>
         <button id="tlModalBtnEdit" class="py-2 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm">
           Edit
+        </button>
+        <button id="tlModalBtnDelete" title="Delete Booking" class="py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl font-bold text-xs shadow-sm flex items-center justify-center gap-1 active:scale-95">
+          <i class="fa-solid fa-trash text-rose-500"></i>
         </button>
         <button id="tlModalBtnRemind" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm">
           <i class="fa-brands fa-whatsapp"></i> WhatsApp
@@ -2566,8 +2574,14 @@ Current rate: ₹${b.rate}/day
               </div>
             ` : nextRes ? `
               <div class="bg-blue-50/70 p-2 rounded-lg border border-blue-200 text-xs flex items-center justify-between">
-                <span class="font-semibold text-blue-900">📅 Next: ${nextRes.customer}</span>
-                <span class="text-blue-700 font-bold">${nextRes.pickup_date}</span>
+                <div>
+                  <span class="font-semibold text-blue-900">📅 Next: ${nextRes.customer}</span>
+                  <span class="text-blue-700 font-bold ml-1">${nextRes.pickup_date}</span>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button onclick="editBooking('${nextRes.id}')" title="Edit Booking" class="p-1 text-slate-500 hover:text-slate-800"><i class="fa-solid fa-pen text-xs"></i></button>
+                  <button onclick="deleteBooking('${nextRes.id}')" title="Delete Booking" class="p-1 text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash text-xs"></i></button>
+                </div>
               </div>
             ` : `
               <div class="text-xs text-emerald-700 font-semibold flex items-center gap-1">
@@ -2575,7 +2589,7 @@ Current rate: ₹${b.rate}/day
               </div>
             `}
 
-            <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+            <div class="pt-2 border-t border-slate-100 flex items-center gap-1.5 flex-wrap">
               ${(st === 'Available In Shop' || st === 'Returned Today') ? `
                 <button onclick="prefillBookingForPlate('${b.plate}')" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 active:scale-95">
                   <i class="fa-solid fa-plus"></i> Book Vehicle
@@ -2590,6 +2604,9 @@ Current rate: ₹${b.rate}/day
                 </button>
                 <button onclick="openCheckInModal('${bk.id}')" class="flex-1 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
                   Return
+                </button>
+                <button onclick="deleteBooking('${bk.id}')" title="Delete Booking" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold shadow-sm flex items-center justify-center active:scale-95">
+                  <i class="fa-solid fa-trash text-rose-500"></i>
                 </button>
               ` : ''}
             </div>
@@ -3052,6 +3069,9 @@ Current rate: ₹${b.rate}/day
                 <button onclick="editBooking('${b.id}')" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300">
                   <i class="fa-solid fa-pen-to-square"></i> Edit
                 </button>
+                <button onclick="deleteBooking('${b.id}')" title="Delete Booking" class="px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 active:scale-95">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
                 <span class="px-2 py-0.5 rounded-full text-[11px] font-bold ${badge}">${badgeLabel}</span>
               </div>
             </div>
@@ -3109,6 +3129,9 @@ Current rate: ₹${b.rate}/day
                   Return
                 </button>
               ` : ''}
+              <button onclick="deleteBooking('${b.id}')" title="Delete Booking" class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+                <i class="fa-solid fa-trash text-rose-500"></i> Delete
+              </button>
             </div>
           `;
           mobileCards.appendChild(mCard);
@@ -3466,6 +3489,9 @@ Current rate: ₹${b.rate}/day
                 </button>
                 <button onclick="editBooking('${b.id}')" class="py-2 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
                   <i class="fa-solid fa-pen"></i> Edit
+                </button>
+                <button onclick="deleteBooking('${b.id}')" title="Delete Booking" class="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center active:scale-95">
+                  <i class="fa-solid fa-trash text-sm text-rose-500"></i>
                 </button>
                 <a href="https://wa.me/${getCleanWaNumber(b)}?text=Hello%20${encodeURIComponent(b.customer)},%20thank%20you%20for%20renting%20with%20BikeAtRent!%20Your%20trip%20${b.id}%20for%20${encodeURIComponent(b.model)}%20is%20settled%20and%20closed.%20Total%20Rent:%20₹${totalRent}." target="_blank" class="p-2 bg-emerald-100 text-emerald-700 rounded-xl font-bold flex items-center justify-center">
                   <i class="fa-brands fa-whatsapp text-base"></i>
@@ -3913,7 +3939,17 @@ Current rate: ₹${b.rate}/day
         runAvailabilityCheck();
         renderTimeline();
         updateKpis();
+        if (typeof renderCompletedBookingsTable === 'function') {
+          renderCompletedBookingsTable();
+        }
       }
+    }
+
+    function deleteCurrentModalBooking() {
+      const bkId = document.getElementById('formBookingId')?.value;
+      if (!bkId) return;
+      closeBookingModal();
+      deleteBooking(bkId);
     }
 
     // -------------------------------------------------------------
@@ -3929,6 +3965,8 @@ Current rate: ₹${b.rate}/day
       document.getElementById('bookingForm').reset();
       document.getElementById('formBookingId').value = b.id;
       document.getElementById('modalTitle').innerText = `Edit Booking ${b.id} — ${b.customer}`;
+      const delBtn = document.getElementById('btnDeleteInModal');
+      if (delBtn) delBtn.classList.remove('hidden');
 
       document.getElementById('formCustomer').value = b.customer || '';
       document.getElementById('formCountryCode').value = b.country_code || '+91';
@@ -4265,6 +4303,8 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
     function openBookingModal() {
       document.getElementById('bookingForm').reset();
       document.getElementById('formBookingId').value = '';
+      const delBtn = document.getElementById('btnDeleteInModal');
+      if (delBtn) delBtn.classList.add('hidden');
       document.getElementById('formCountryCode').value = '+91';
       document.getElementById('modalTitle').innerText = 'New Customer Booking & Dispatch';
 
@@ -5499,6 +5539,14 @@ Please select another vehicle.`);
         btnEdit.onclick = () => {
           closeTimelineCellModal();
           editBooking(b.id);
+        };
+      }
+
+      const btnDelete = document.getElementById('tlModalBtnDelete');
+      if (btnDelete) {
+        btnDelete.onclick = () => {
+          closeTimelineCellModal();
+          deleteBooking(b.id);
         };
       }
 
