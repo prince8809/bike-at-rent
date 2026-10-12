@@ -679,18 +679,64 @@
     <!-- ============================================================== -->
     <div id="timelineTab" class="tab-content hidden space-y-4">
       
-      <div class="flex items-center justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900">30-Day Fleet Dispatch Matrix</h2>
-          <p class="text-xs text-slate-500">Visual calendar of all 47 bikes. Green = Free (click to book). Red = Booked (click for details/extend).</p>
+      <!-- Timeline Header & Controls -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-timeline text-emerald-600"></i>
+              <span>30-Day Fleet Dispatch Matrix</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">Visual dispatch calendar of all 47 bikes across Siliguri Junction & NJP. Green (+) = Free (click to book). Red = Active On Trip. Blue = Future Reserved.</p>
+          </div>
+
+          <!-- Date Navigation Bar -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="shiftTimeline(-15)" title="Previous 15 Days" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
+              <i class="fa-solid fa-chevron-left"></i> -15d
+            </button>
+            <button onclick="shiftTimeline(-7)" title="Previous 7 Days" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
+              <i class="fa-solid fa-chevron-left"></i> -7d
+            </button>
+            <button onclick="resetTimelineToday()" title="Reset to Today" class="px-3.5 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition shadow-sm active:scale-95">
+              Today
+            </button>
+            <button onclick="shiftTimeline(7)" title="Next 7 Days" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
+              +7d <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <button onclick="shiftTimeline(15)" title="Next 15 Days" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
+              +15d <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
-        <div class="flex items-center space-x-3 text-xs font-semibold">
-          <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-emerald-400 inline-block"></span><span>Free / Available</span></span>
-          <span class="flex items-center space-x-1"><span class="w-3 h-3 rounded bg-rose-500 inline-block"></span><span>Booked</span></span>
+
+        <!-- Filter Bar & Legend -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2.5 border-t border-slate-100 text-xs">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="relative w-48 sm:w-60">
+              <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+              <input type="text" id="timelineSearchInput" onkeyup="renderTimeline()" placeholder="Filter plate or model..." class="w-full pl-7 pr-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            </div>
+            <select id="timelineStoreFilter" onchange="renderTimeline()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 outline-none font-medium">
+              <option value="ALL">All Stores (47 Bikes)</option>
+              <option value="Junction Store">🏙️ Siliguri Junction Store</option>
+              <option value="NJP Store">🚉 NJP Station Store</option>
+            </select>
+            <span id="timelineRangeLabel" class="text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200"></span>
+          </div>
+
+          <!-- Color Legend -->
+          <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-600">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-100 border border-emerald-400 inline-block"></span><span>Free (Click +)</span></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block"></span><span>Active On Trip</span></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-sky-500 inline-block"></span><span>Future Reserved</span></span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block"></span><span>Today</span></span>
+          </div>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- Gantt Matrix Scroll Container -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto custom-scroll p-2" id="timelineContainer">
           <!-- Rendered via JS -->
         </div>
@@ -1387,12 +1433,18 @@
         <!-- Filled via JS -->
       </div>
 
-      <div class="pt-2 border-t flex space-x-2">
-        <button id="tlModalBtnExtend" class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded font-bold text-xs">
+      <div class="pt-2 border-t flex flex-wrap gap-1.5">
+        <button id="tlModalBtnExtend" class="flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-xs shadow-sm">
           Extend
         </button>
-        <button id="tlModalBtnRemind" class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-xs flex items-center justify-center gap-1">
-          <i class="fa-brands fa-whatsapp"></i> Remind
+        <button id="tlModalBtnSwap" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-sm">
+          Swap Bike
+        </button>
+        <button id="tlModalBtnEdit" class="py-2 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs shadow-sm">
+          Edit
+        </button>
+        <button id="tlModalBtnRemind" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-sm">
+          <i class="fa-brands fa-whatsapp"></i> WhatsApp
         </button>
       </div>
     </div>
@@ -5236,7 +5288,7 @@ Please select another vehicle.`);
     }
 
     // -------------------------------------------------------------
-    // TIMELINE CALENDAR GANTT VIEW
+    // TAB 4: 30-DAY TIMELINE GANTT & FLEET DISPATCH MATRIX
     // -------------------------------------------------------------
     let timelineBaseDate = getTodayISO();
 
@@ -5251,76 +5303,218 @@ Please select another vehicle.`);
     }
 
     function renderTimeline() {
-      const headerRow = document.getElementById('timelineHeaderRow');
-      const body = document.getElementById('timelineBody');
+      const container = document.getElementById('timelineContainer');
+      if (!container) return;
+
+      const search = (document.getElementById('timelineSearchInput')?.value || '').toLowerCase().trim();
+      const storeFilter = document.getElementById('timelineStoreFilter')?.value || 'ALL';
       const rangeLabel = document.getElementById('timelineRangeLabel');
-      if (!headerRow || !body) return;
+      const today = getTodayISO();
 
-      headerRow.innerHTML = '<th class="py-3 px-3 w-48 sticky left-0 bg-slate-100 z-10 text-slate-700 font-bold border-r border-slate-200">Vehicle / Store</th>';
-      body.innerHTML = '';
+      // Filter vehicles
+      const filteredFleet = fleet.filter(b => {
+        if (search) {
+          const matchPlate = (b.plate || '').toLowerCase().includes(search);
+          const matchModel = (b.model || '').toLowerCase().includes(search);
+          if (!matchPlate && !matchModel) return false;
+        }
+        if (storeFilter !== 'ALL' && b.location !== storeFilter) {
+          return false;
+        }
+        return true;
+      });
 
+      // Build 30-day date array from timelineBaseDate
       const dates = [];
-      for (let i = 0; i < 14; i++) {
+      for (let i = 0; i < 30; i++) {
         dates.push(addDaysISO(timelineBaseDate, i));
       }
 
       if (rangeLabel) {
-        rangeLabel.innerText = `${dates[0]} → ${dates[13]}`;
+        rangeLabel.innerText = `${dates[0]} → ${dates[29]} (30 Days)`;
       }
 
-      const today = getTodayISO();
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-      dates.forEach(d => {
-        const th = document.createElement('th');
-        const isToday = d === today;
-        th.className = `py-2 px-1 text-center font-bold text-[11px] border-r border-slate-200 ${isToday ? 'bg-amber-100 text-amber-900 border-b-2 border-b-amber-500' : 'text-slate-600'}`;
-        const dayParts = d.split('-');
-        th.innerHTML = `<div>${dayParts[2]}</div><div class="text-[9px] font-normal text-slate-400">${dayParts[1]}</div>`;
-        headerRow.appendChild(th);
+      let html = '<table class="w-full text-left text-xs border-collapse">';
+      
+      // Table Header Row
+      html += '<thead><tr class="bg-slate-900 text-white">';
+      html += '<th class="p-2.5 border border-slate-800 min-w-[200px] w-52 sticky left-0 bg-slate-900 z-30 font-extrabold text-xs shadow-md">Vehicle / Store (' + filteredFleet.length + ')</th>';
+
+      dates.forEach(dt => {
+        const isToday = dt === today;
+        const [y, m, d] = dt.split('-');
+        const dateObj = new Date(dt + 'T00:00:00');
+        const dayOfWeek = dayNames[dateObj.getDay()];
+        const monthName = monthNames[parseInt(m) - 1];
+
+        html += `<th class="p-1 border border-slate-800 text-center min-w-[40px] w-10 ${isToday ? 'bg-amber-500 text-slate-950 font-black ring-2 ring-amber-400' : 'bg-slate-800/90 text-slate-200 font-semibold'}">
+          <div class="text-[11px] font-mono font-bold leading-tight">${d}</div>
+          <div class="text-[9px] uppercase font-normal opacity-80 leading-tight">${monthName}</div>
+          <div class="text-[8px] font-bold ${isToday ? 'text-slate-900' : 'text-slate-400'} leading-tight">${dayOfWeek}</div>
+        </th>`;
       });
 
-      fleet.forEach(b => {
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-slate-100 hover:bg-slate-50/50';
+      html += '</tr></thead><tbody>';
 
-        const storeTag = b.location === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn';
-        let tdVehicle = `<td class="py-2.5 px-3 sticky left-0 bg-white z-10 border-r border-slate-200">
-          <div class="font-extrabold text-slate-900 text-xs font-mono">${b.plate}</div>
-          <div class="text-[10px] text-slate-500 truncate max-w-[170px]">${b.model} • <span class="font-bold text-purple-700">${storeTag}</span></div>
-        </td>`;
+      if (filteredFleet.length === 0) {
+        html += `<tr><td colspan="31" class="p-8 text-center text-slate-500 font-semibold bg-white">No vehicles match search criteria.</td></tr>`;
+      } else {
+        filteredFleet.forEach((b, idx) => {
+          const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+          const stickyBg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+          const storeTag = b.location === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn';
 
-        let daysHtml = '';
-        dates.forEach(d => {
-          const isToday = d === today;
-          const bk = bookings.find(x => 
-            x.plate === b.plate && 
-            x.status !== 'Cancelled' &&
-            x.pickup_date <= d && 
-            x.drop_date >= d
-          );
+          html += `<tr class="hover:bg-amber-50/30 transition ${rowBg}">`;
+          
+          // Sticky vehicle info cell
+          html += `<td class="p-2 border border-slate-200 sticky left-0 ${stickyBg} z-20 shadow-sm">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-slate-900 font-mono text-xs">${b.plate}</span>
+              <span class="text-[10px] font-bold text-purple-700 bg-purple-50 px-1 rounded">${storeTag}</span>
+            </div>
+            <div class="text-[10px] text-slate-500 truncate max-w-[170px] mt-0.5">${b.model} · ₹${b.rate}/d</div>
+          </td>`;
 
-          if (bk) {
-            let color = 'bg-rose-500 text-white';
-            if (bk.status === 'Upcoming') color = 'bg-sky-500 text-white';
-            if (bk.status === 'Completed') color = 'bg-slate-400 text-white';
+          // 30 Date cells
+          dates.forEach(dt => {
+            const isToday = dt === today;
+            const bookedEntry = bookings.find(bk => 
+              bk.status !== 'Cancelled' &&
+              bk.status !== 'Completed' &&
+              bk.plate === b.plate &&
+              bk.pickup_date <= dt &&
+              bk.drop_date >= dt
+            );
 
-            daysHtml += `<td class="p-1 border-r border-slate-100 text-center ${isToday ? 'bg-amber-50/50' : ''}">
-              <div onclick="openReminderModal('${bk.id}')" title="${bk.customer} (${bk.pickup_date} → ${bk.drop_date})" class="${color} rounded py-1 px-0.5 text-[9px] font-bold truncate cursor-pointer shadow-xs hover:opacity-80">
-                ${bk.customer.split(' ')[0]}
-              </div>
-            </td>`;
-          } else {
-            daysHtml += `<td class="p-1 border-r border-slate-100 text-center ${isToday ? 'bg-amber-50/50' : ''}">
-              <div onclick="openBookingWithDates('${d}', '${addDaysISO(d, 2)}')" title="Free. Click to book." class="h-6 rounded hover:bg-emerald-100/60 cursor-pointer flex items-center justify-center text-slate-200 hover:text-emerald-700 text-[10px]">
-                +
-              </div>
-            </td>`;
-          }
+            if (bookedEntry) {
+              const isStart = bookedEntry.pickup_date === dt;
+              const isEnd = bookedEntry.drop_date === dt;
+              let bgClass = 'bg-rose-500 text-white';
+              let badgeText = '●';
+              if (bookedEntry.status === 'Upcoming') {
+                bgClass = 'bg-sky-500 text-white';
+                badgeText = '▲';
+              }
+
+              const tooltip = `${bookedEntry.customer} (${bookedEntry.phone}) • ${bookedEntry.pickup_date} to ${bookedEntry.drop_date} • ₹${bookedEntry.total_rent}`;
+
+              html += `<td class="p-0.5 border border-slate-200 text-center ${isToday ? 'bg-amber-50/70' : ''}">
+                <div onclick="openTimelineCellModal('${bookedEntry.id}', '${dt}')" title="${tooltip}" class="${bgClass} hover:opacity-90 cursor-pointer h-7 rounded flex items-center justify-center font-bold text-[9px] shadow-xs active:scale-95 transition">
+                  <span class="truncate px-0.5">${isStart ? '▶' : (isEnd ? '🏁' : badgeText)}</span>
+                </div>
+              </td>`;
+            } else {
+              // Free slot (click to pre-fill booking)
+              html += `<td class="p-0.5 border border-slate-200 text-center ${isToday ? 'bg-amber-50/70' : ''}">
+                <div onclick="prefillBookingForPlate('${b.plate}', '${dt}', '${addDaysISO(dt, 2)}')" title="Available on ${dt} (${b.plate} — ${b.model}). Click to Book." class="h-7 rounded bg-emerald-50/60 hover:bg-emerald-200 text-emerald-500 hover:text-emerald-800 cursor-pointer flex items-center justify-center text-xs font-bold transition active:scale-95">
+                  +
+                </div>
+              </td>`;
+            }
+          });
+
+          html += '</tr>';
         });
+      }
 
-        tr.innerHTML = tdVehicle + daysHtml;
-        body.appendChild(tr);
-      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // Modal 5: Open Timeline Cell Quick Info Modal
+    function openTimelineCellModal(bkId, dt) {
+      const b = bookings.find(x => x.id === bkId);
+      if (!b) return;
+
+      const plateEl = document.getElementById('tlModalPlate');
+      const detailsEl = document.getElementById('tlModalDetails');
+      const modal = document.getElementById('timelineCellModal');
+      const btnExtend = document.getElementById('tlModalBtnExtend');
+      const btnSwap = document.getElementById('tlModalBtnSwap');
+      const btnEdit = document.getElementById('tlModalBtnEdit');
+      const btnRemind = document.getElementById('tlModalBtnRemind');
+      if (!modal) return;
+
+      if (plateEl) plateEl.innerText = `${b.plate} — ${b.model}`;
+
+      const statusBadge = b.status === 'Active'
+        ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">🟢 Active On Trip</span>'
+        : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-100 text-sky-800">📅 Future Reserved</span>';
+
+      if (detailsEl) {
+        detailsEl.innerHTML = `
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1">
+            <div class="flex justify-between items-center">
+              <span class="font-extrabold text-slate-900 text-sm">${b.customer}</span>
+              ${statusBadge}
+            </div>
+            <div class="text-slate-600 font-semibold flex items-center gap-1">
+              <i class="fa-brands fa-whatsapp text-emerald-600"></i> ${b.country_code || '+91'} ${b.phone}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+            <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
+              <span class="text-slate-400 font-bold uppercase text-[9px] block">Dates & Days</span>
+              <strong class="text-slate-800">${b.pickup_date} → ${b.drop_date}</strong>
+              <span class="text-slate-500 block">(${b.days} Days Rented)</span>
+            </div>
+            <div class="p-2 bg-slate-50 rounded-lg border border-slate-100">
+              <span class="text-slate-400 font-bold uppercase text-[9px] block">Stations</span>
+              <strong class="text-slate-800">${b.pickup_branch} ➔ ${b.drop_branch}</strong>
+            </div>
+          </div>
+
+          <div class="p-2 bg-slate-50 rounded-lg border border-slate-100 text-[11px] flex justify-between items-center">
+            <div>
+              <span class="text-slate-400 font-bold uppercase text-[9px] block">Total Rent</span>
+              <strong class="text-emerald-700 text-sm">₹${b.total_rent}</strong>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-400 font-bold uppercase text-[9px] block">Advance / Due</span>
+              <span class="text-slate-600">Adv: ₹${b.advance} · <strong class="text-rose-600">Due: ₹${b.balance}</strong></span>
+            </div>
+          </div>
+        `;
+      }
+
+      if (btnExtend) {
+        btnExtend.onclick = () => {
+          closeTimelineCellModal();
+          openExtendModal(b.id);
+        };
+      }
+
+      if (btnSwap) {
+        btnSwap.onclick = () => {
+          closeTimelineCellModal();
+          openSwapVehicleModal(b.id);
+        };
+      }
+
+      if (btnEdit) {
+        btnEdit.onclick = () => {
+          closeTimelineCellModal();
+          editBooking(b.id);
+        };
+      }
+
+      if (btnRemind) {
+        btnRemind.onclick = () => {
+          closeTimelineCellModal();
+          openReminderModal(b.id);
+        };
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeTimelineCellModal() {
+      const modal = document.getElementById('timelineCellModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     // -------------------------------------------------------------
