@@ -213,18 +213,29 @@
           </div>
 
           <div class="grid grid-cols-2 md:flex items-center gap-2 w-full md:w-auto">
-            <select id="dashModelFilter" onchange="renderDashboardTable()" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-slate-700 outline-none w-full">
-              <option value="ALL">All Models</option>
-              <option value="Ntorq">TVS Ntorq 125</option>
-              <option value="Xpulse">Hero Xpulse 200</option>
-              <option value="Classic">Royal Enfield Classic</option>
-              <option value="Hunter">Royal Enfield Hunter</option>
-              <option value="Himalayan">Royal Enfield Himalayan</option>
-              <option value="Scram">Royal Enfield Scram 411</option>
-              <option value="Activa">Honda Activa 125</option>
-              <option value="Jupiter">TVS Jupiter 110</option>
+            <select id="dashModelFilter" onchange="renderDashboardTable()" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-slate-700 outline-none w-full font-medium">
+              <option value="ALL">All Models (47)</option>
+              <option value="Ntorq">TVS Ntorq 125 (All 24)</option>
+              <option value="Ntorq Regular">TVS Ntorq Regular (₹800/d • 7)</option>
+              <option value="Ntorq XP">TVS Ntorq Race XP / XT (₹900/d • 5)</option>
+              <option value="Ntorq New Gen">TVS Ntorq New Gen (₹1,000/d • 12)</option>
+              <option value="Xpulse">Hero Xpulse 200 4V (3)</option>
+              <option value="Classic">Royal Enfield Classic 350</option>
+              <option value="Hunter">Royal Enfield Hunter 350</option>
+              <option value="Himalayan">Royal Enfield Himalayan 411</option>
+              <option value="Scram">Royal Enfield Scram 411 (2)</option>
+              <option value="Interceptor">Royal Enfield Interceptor 650</option>
+              <option value="Activa">Honda Activa 125 (2)</option>
+              <option value="Jupiter">TVS Jupiter 110 (3)</option>
               <option value="Access">Suzuki Access 125</option>
               <option value="Avenis">Suzuki Avenis 125</option>
+              <option value="Grazia">Honda Grazia 125</option>
+              <option value="Apache RTR 160">TVS Apache RTR 160</option>
+              <option value="Apache RTR 200">TVS Apache RTR 200 4V</option>
+              <option value="Pulsar NS160">Bajaj Pulsar NS160</option>
+              <option value="Pulsar N250">Bajaj Pulsar N250</option>
+              <option value="Xoom">Hero Xoom 160</option>
+              <option value="Radeon">TVS Radeon 110</option>
             </select>
 
             <select id="dashStatusFilter" onchange="onDashStatusFilterDropdownChange(this.value)" class="text-xs sm:text-sm border border-slate-300 rounded-lg px-2.5 py-2 bg-white text-slate-700 outline-none w-full">
@@ -319,6 +330,7 @@
             <label class="block text-xs font-semibold text-slate-600 mb-1">Filter by Model Category</label>
             <select id="availCategoryFilter" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-700 font-medium focus:ring-2 focus:ring-brand-red outline-none">
               <option value="ALL">All Fleet Categories (47)</option>
+              <option value="Ntorq (All)">TVS Ntorq 125 (All 24 Units)</option>
               <option value="Ntorq 125 (₹800)">Ntorq 125 Regular (₹800/day)</option>
               <option value="Ntorq 125 (₹900)">Ntorq 125 Race XP/XT (₹900/day)</option>
               <option value="Ntorq 125 (₹1,000)">Ntorq 125 New Gen (₹1,000/day)</option>
@@ -2372,7 +2384,19 @@ Current rate: ₹${b.rate}/day
         }
 
         // Apply Model Filter
-        if (modelF !== 'ALL' && !b.model.toLowerCase().includes(modelF.toLowerCase())) return;
+        if (modelF !== 'ALL') {
+          if (modelF === 'Ntorq Regular') {
+            if (b.category !== 'Ntorq 125 (₹800)') return;
+          } else if (modelF === 'Ntorq XP') {
+            if (b.category !== 'Ntorq 125 (₹900)') return;
+          } else if (modelF === 'Ntorq New Gen') {
+            if (b.category !== 'Ntorq 125 (₹1,000)') return;
+          } else if (modelF === 'Ntorq') {
+            if (!b.model.toLowerCase().includes('ntorq')) return;
+          } else if (!b.model.toLowerCase().includes(modelF.toLowerCase())) {
+            return;
+          }
+        }
 
         // Apply Search Filter (matches plate, model, color, store, customer, phone)
         if (search) {
@@ -2700,7 +2724,13 @@ Current rate: ₹${b.rate}/day
       const bookedBikes = [];
 
       fleet.forEach(b => {
-        if (cat !== 'ALL' && b.category !== cat) return;
+        if (cat !== 'ALL') {
+          if (cat === 'Ntorq (All)') {
+            if (!b.model.toLowerCase().includes('ntorq')) return;
+          } else if (b.category !== cat) {
+            return;
+          }
+        }
         if (conflictingBookingsByPlate[b.plate]) {
           bookedBikes.push({ bike: b, conflict: conflictingBookingsByPlate[b.plate] });
         } else {
@@ -5325,7 +5355,7 @@ Please select another vehicle.`);
                `• Original ID Proof (Aadhaar / Passport / Voter ID)\n` +
                `• 1 Passport Size Photo\n\n` +
                `${videoLink ? `🎥 Vehicle Showcase: ${videoLink}\n\n` : ''}` +
-               `📞 Helpline / WhatsApp: +91 9832011223\n` +
+               `📞 Helpline / WhatsApp: +91 9933181848\n` +
                `Ride safe & enjoy the mountains! 🏔️✨`;
       }
       else if (tplKey === 'overdue') {
