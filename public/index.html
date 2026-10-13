@@ -1111,19 +1111,44 @@
     function shareWhatsAppVoucher(bkId) {
       const b = bookings.find(x => x.id === bkId);
       if (!b) return;
-      const text = `*BIKE AT RENT — BOOKING CONFIRMATION*%0A%0A` +
+      const days = b.days || 1;
+      const rate = b.rate || 0;
+      const baseRent = b.base_rent ? b.base_rent : (days * rate);
+      const auth = parseFloat(b.auth_charge) || 0;
+      const extra = parseFloat(b.extra_charge) || 0;
+      const adv = parseFloat(b.advance) || 0;
+      const totalRent = baseRent + auth + extra;
+      const rentBalance = Math.max(0, totalRent - adv);
+
+      const depositRaw = (b.deposit || '').trim();
+      const depositMatch = depositRaw.match(/\d[\d,]*/);
+      const depositNum = depositMatch ? parseInt(depositMatch[0].replace(/,/g, ''), 10) : 0;
+      const totalDueAtPickup = rentBalance + depositNum;
+
+      let extrasLine = extra > 0 ? `• Add-on Extras: *₹${extra}*%0A` : '';
+      let depositText = depositNum > 0 ? `• Security Deposit (Refundable): *₹${depositNum.toLocaleString('en-IN')}*%0A` : `• Security Deposit: *${depositRaw || 'Original ID proof'}*%0A`;
+
+      const text = `*BIKE AT RENT SILIGURI — BOOKING CONFIRMATION* 🏍️%0A%0A` +
                    `Booking ID: *${b.id}*%0A` +
                    `Customer: *${b.customer}*%0A` +
                    `Vehicle: *${b.model} (${b.plate})*%0A` +
-                   `Pickup: *${b.pickup_date}*%0A` +
-                   `Return: *${b.drop_date}* (${b.days} Days)%0A` +
-                   `Total Rent: *₹${b.total_rent}*%0A` +
-                   `Advance Paid: *₹${b.advance}*%0A` +
-                   `Balance at Pickup: *₹${b.balance}*%0A` +
-                   `Security Deposit: *${b.deposit}*%0A%0A` +
-                   `Shop Address: Siliguri (Near Junction / NJP)%0A` +
-                   `Helpline / WhatsApp: +91-9832011223%0A` +
-                   `Ride Safe & Enjoy the Mountains! 🏍️`;
+                   `Pickup: *${b.pickup_branch || 'Junction Store'}* on *${b.pickup_date}* (${b.pickup_time || '10:00 AM'})%0A` +
+                   `Return: *${b.drop_branch || 'Junction Store'}* by *${b.drop_date}* (${b.drop_time || '07:00 PM'})%0A` +
+                   `Duration: *${days} Days* @ ₹${rate}/day%0A%0A` +
+                   `💰 *Rental & Payment Breakdown:*%0A` +
+                   `• Base Rent: *₹${baseRent}*%0A` +
+                   `• Authorisation / Permit Fee: *₹${auth}*%0A` +
+                   `${extrasLine}` +
+                   `• Total Rental Amount: *₹${totalRent}*%0A` +
+                   `• Advance Paid: *-₹${adv}*%0A` +
+                   `• Remaining Rental Balance: *₹${rentBalance}*%0A` +
+                   `${depositText}%0A` +
+                   `👉 *TOTAL BALANCE DUE AT PICKUP: ₹${totalDueAtPickup.toLocaleString('en-IN')}*%0A` +
+                   `_(Rent Balance ₹${rentBalance} + Refundable Deposit ₹${depositNum.toLocaleString('en-IN')})_%0A%0A` +
+                   `Free Gears: 2 Helmets, Mobile Holder & Charger%0A` +
+                   `Store Hubs: Siliguri Junction & NJP Railway Station%0A` +
+                   `Helpline / WhatsApp: +91 9832011223%0A` +
+                   `Ride Safe & Enjoy the Mountains! 🏔️`;
       window.open(`https://wa.me/91${b.phone}?text=${text}`, '_blank');
     }
 

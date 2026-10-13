@@ -1068,7 +1068,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Security Deposit / ID Proof</label>
-            <input type="text" id="formDeposit" placeholder="e.g. ₹3,000 + Original DL" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
+            <input type="text" id="formDeposit" oninput="calculateModalTotal()" placeholder="e.g. ₹3,000 + Original DL" class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-red outline-none">
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Booking Status</label>
@@ -1091,8 +1091,11 @@
             <i class="fa-solid fa-trash text-rose-500"></i> Delete Booking
           </button>
           <div class="flex items-center space-x-2 ml-auto">
-            <button type="button" onclick="closeBookingModal()" class="px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-100 font-medium transition text-xs sm:text-sm">Cancel</button>
-            <button type="submit" id="btnSaveBooking" class="px-5 py-2 bg-brand-red hover:bg-rose-700 text-white rounded-lg font-bold shadow transition text-xs sm:text-sm">Save Booking</button>
+            <button type="button" onclick="closeBookingModal()" class="px-3 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-100 font-medium transition text-xs sm:text-sm">Cancel</button>
+            <button type="button" onclick="saveBookingAndConfirm(event)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow transition text-xs sm:text-sm flex items-center gap-1.5 active:scale-95" title="Save and immediately generate WhatsApp Confirmation Voucher">
+              <i class="fa-brands fa-whatsapp text-sm"></i> Save & Confirm
+            </button>
+            <button type="submit" id="btnSaveBooking" class="px-4 py-2 bg-brand-red hover:bg-rose-700 text-white rounded-lg font-bold shadow transition text-xs sm:text-sm">Save Booking</button>
           </div>
         </div>
 
@@ -1386,7 +1389,7 @@
             🟢 Mid-Rental Check-In
           </button>
           <button type="button" onclick="selectReminderTemplate('voucher')" id="btnTplVoucher" class="tpl-btn p-2 rounded-lg border text-left font-semibold transition bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100">
-            🔵 Booking Voucher
+            🔵 Booking Confirmation
           </button>
           <button type="button" onclick="selectReminderTemplate('overdue')" id="btnTplOverdue" class="tpl-btn p-2 rounded-lg border text-left font-semibold transition bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100">
             🔴 Overdue Notice
@@ -1400,7 +1403,7 @@
           <span>Message Preview (Editable):</span>
           <span class="text-[11px] text-slate-400">Will be sent via wa.me link</span>
         </label>
-        <textarea id="remMessageText" rows="6" class="w-full border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 outline-none leading-relaxed"></textarea>
+        <textarea id="remMessageText" rows="9" class="w-full border border-slate-300 rounded-xl p-3 font-mono text-xs text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 outline-none leading-relaxed"></textarea>
       </div>
 
       <!-- Actions -->
@@ -3023,12 +3026,16 @@ Current rate: ₹${b.rate}/day
                   <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
                 </button>
 
-                ${isDueToday ? `
+                ${b.status === 'Upcoming' ? `
+                  <button onclick="openReminderModal('${b.id}', 'voucher')" title="Send WhatsApp Booking Confirmation" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 active:scale-95">
+                    <i class="fa-brands fa-whatsapp"></i> Confirm
+                  </button>
+                ` : isDueToday ? `
                   <button onclick="openReminderModal('${b.id}', 'return_today')" title="Remind to return today or extend" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-xs font-bold shadow-sm flex items-center gap-1 animate-pulse">
                     <i class="fa-solid fa-bell"></i> Remind
                   </button>
                 ` : `
-                  <button onclick="openReminderModal('${b.id}')" title="Send WhatsApp Message" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1">
+                  <button onclick="openReminderModal('${b.id}', 'mid_trip')" title="Send WhatsApp Message" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-sm flex items-center gap-1">
                     <i class="fa-brands fa-whatsapp"></i> Remind
                   </button>
                 `}
@@ -3113,7 +3120,7 @@ Current rate: ₹${b.rate}/day
               <button onclick="editBooking('${b.id}')" class="py-1.5 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
                 <i class="fa-solid fa-pen-to-square"></i> Edit
               </button>
-              <button onclick="openReminderModal('${b.id}')" class="py-1.5 px-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
+              <button onclick="openReminderModal('${b.id}', '${b.status === 'Upcoming' ? 'voucher' : (isDueToday ? 'return_today' : 'mid_trip')}')" title="${b.status === 'Upcoming' ? 'Send WhatsApp Confirmation' : 'Send WhatsApp'}" class="py-1.5 px-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 active:scale-95">
                 <i class="fa-brands fa-whatsapp"></i>
               </button>
               ${(b.status === 'Active' || b.status === 'Upcoming') ? `
@@ -4561,9 +4568,13 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       if (breakdown) {
         let parts = [`Base Rent: ${days}d × ₹${rate} = ₹${baseRent}`];
         if (auth > 0) parts.push(`Auth Fee: ₹${auth}`);
-        if (extra > 0) parts.push(`Extras/Gears: ₹${extra}`);
-        const bal = Math.max(0, total - adv);
-        breakdown.innerHTML = `${parts.join(' + ')} = <strong class="text-brand-red font-bold">₹${total}</strong> (Bal: <strong>₹${bal}</strong>)`;
+        if (extra > 0) parts.push(`Extras: ₹${extra}`);
+        const rentBal = Math.max(0, total - adv);
+        const depRaw = document.getElementById('formDeposit')?.value || '';
+        const depMatch = depRaw.match(/\d[\d,]*/);
+        const depNum = depMatch ? parseInt(depMatch[0].replace(/,/g, ''), 10) : 0;
+        const totalDueAtPickup = rentBal + depNum;
+        breakdown.innerHTML = `${parts.join(' + ')} = <strong class="text-brand-red font-bold">Total Rent: ₹${total}</strong> (Adv: ₹${adv} · Rent Bal: ₹${rentBal}${depNum > 0 ? ` + Dep: ₹${depNum} = <strong class="text-emerald-700">Due at Pickup: ₹${totalDueAtPickup}</strong>` : ''})`;
       }
     }
 
@@ -4576,8 +4587,20 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       onModalPlateChange();
     }
 
+    function saveBookingAndConfirm(e) {
+      if (e && e.preventDefault) e.preventDefault();
+      const savedBkId = saveBookingCore(false);
+      if (savedBkId) {
+        openReminderModal(savedBkId, 'voucher');
+      }
+    }
+
     function saveBooking(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
+      saveBookingCore(true);
+    }
+
+    function saveBookingCore(showToastAndClose = true) {
       const p = document.getElementById('formPlate').value;
       if (!p) {
         alert('Please select a valid available vehicle!');
@@ -4684,12 +4707,15 @@ Please select another vehicle.`);
 
       saveState();
       closeBookingModal();
-      showToast(`Booking ${newBk.id} saved & synced (${newBk.status === 'Upcoming' ? '📅 Future Reserved' : '🟢 Active On Trip'})!`);
+      if (showToastAndClose) {
+        showToast(`Booking ${newBk.id} saved & synced (${newBk.status === 'Upcoming' ? '📅 Future Reserved' : '🟢 Active On Trip'})!`);
+      }
       renderDashboardTable();
       renderBookingsTable();
       runAvailabilityCheck();
       renderTimeline();
       updateKpis();
+      return newBk.id;
     }
 
     // -------------------------------------------------------------
@@ -5196,7 +5222,13 @@ Please select another vehicle.`);
       document.getElementById('remModalPhone').innerText = `${b.country_code || '+91'} ${b.phone}`;
       document.getElementById('remModalStatusBadge').innerText = `${b.status} • Drop: ${b.drop_date}`;
 
-      selectReminderTemplate(defaultTemplate);
+      // Default to 'voucher' (Booking Confirmation) for Upcoming bookings
+      let tpl = defaultTemplate;
+      if (b.status === 'Upcoming' && defaultTemplate === 'return_today') {
+        tpl = 'voucher';
+      }
+
+      selectReminderTemplate(tpl);
       document.getElementById('reminderModal').classList.remove('hidden');
     }
 
@@ -5232,11 +5264,71 @@ Please select another vehicle.`);
       else if (tplKey === 'voucher') {
         const btn = document.getElementById('btnTplVoucher');
         if (btn) btn.className = 'tpl-btn p-2 rounded-lg border text-left font-semibold transition bg-blue-50 border-blue-300 text-blue-900';
-        let extrasBreakdown = '';
-        if (b.auth_charge > 0) extrasBreakdown += `Authorisation Fee: *₹${b.auth_charge}*\n`;
-        if (b.extra_charge > 0) extrasBreakdown += `Add-on Gears/Extras: *₹${b.extra_charge}*${b.extra_note ? ` (${b.extra_note})` : ''}\n`;
 
-        text = `*BIKE AT RENT SILIGURI — BOOKING CONFIRMATION*\n\nBooking ID: *${b.id}*\nCustomer: *${b.customer}*\nVehicle: *${b.model} (${b.plate})*\nPickup Store: *${pickStore}* at *${b.pickup_time || '10:00 AM'}* (${b.pickup_date})\nDrop Store: *${dropStore}* by *${b.drop_time || '07:00 PM'}* (${b.drop_date})\nDuration: *${b.days} Days* @ ₹${b.rate}/d\n${extrasBreakdown}Total Rent: *₹${b.total_rent}*\nAdvance Paid: *₹${b.advance}*\nBalance at Pickup: *₹${b.balance}*\nSecurity Deposit: *${b.deposit || 'Original ID proof'}*\nFree Gears: 2 Helmets, Mobile Holder & Charger\n${videoLink ? `Showcase Video: ${videoLink}\n` : ''}Store Hubs: Siliguri Junction & NJP Railway Station\nRide safe & enjoy the mountains! 🏔️`;
+        const days = b.days || 1;
+        const rate = b.rate || 0;
+        const baseRent = b.base_rent ? b.base_rent : (days * rate);
+        const auth = parseFloat(b.auth_charge) || 0;
+        const extra = parseFloat(b.extra_charge) || 0;
+        const adv = parseFloat(b.advance) || 0;
+        const totalRent = baseRent + auth + extra;
+        const rentBalance = Math.max(0, totalRent - adv);
+
+        // Security Deposit parsing (numeric amount vs ID proof)
+        const depositRaw = (b.deposit || 'Original ID proof').trim();
+        const depositMatch = depositRaw.match(/\d[\d,]*/);
+        const depositNum = depositMatch ? parseInt(depositMatch[0].replace(/,/g, ''), 10) : 0;
+
+        // TOTAL BALANCE DUE AT PICKUP = (Base Rent + Authorisation Fee + Extras + Security Deposit) - Advance Paid
+        const totalDueAtPickup = rentBalance + depositNum;
+
+        let extrasLine = '';
+        if (extra > 0) {
+          extrasLine = `• Add-on Extras/Gears: *₹${extra}*${b.extra_note ? ` (${b.extra_note})` : ''}\n`;
+        }
+
+        let depositText = '';
+        if (depositNum > 0) {
+          depositText = `• Security Deposit (Refundable): *₹${depositNum.toLocaleString('en-IN')}*${depositRaw.toLowerCase().includes('id') ? ' + Original ID' : ''}\n`;
+        } else {
+          depositText = `• Security Deposit: *${depositRaw}*\n`;
+        }
+
+        let dueCalculationNote = '';
+        if (depositNum > 0) {
+          dueCalculationNote = `_(Rent Balance ₹${rentBalance} + Refundable Deposit ₹${depositNum.toLocaleString('en-IN')})_\n`;
+        }
+
+        text = `*BIKE AT RENT SILIGURI — BOOKING CONFIRMATION* 🏍️\n\n` +
+               `Booking ID: *${b.id}*\n` +
+               `Customer: *${b.customer}*\n` +
+               `Vehicle: *${b.model} (${b.plate})*\n\n` +
+               `📅 *Trip Schedule:*\n` +
+               `• Pickup Store: *${pickStore}* on *${b.pickup_date}* at *${b.pickup_time || '10:00 AM'}*\n` +
+               `• Drop Store: *${dropStore}* by *${b.drop_date}* (${b.drop_time || '07:00 PM'})\n` +
+               `• Duration: *${days} Days* @ ₹${rate}/day\n\n` +
+               `💰 *Rental & Payment Breakdown:*\n` +
+               `• Base Rent (${days}d × ₹${rate}): *₹${baseRent}*\n` +
+               `• Authorisation / Permit Fee: *₹${auth}*\n` +
+               `${extrasLine}` +
+               `• Total Rental Amount: *₹${totalRent}*\n` +
+               `• Advance Paid: *-₹${adv}*\n` +
+               `• Remaining Rental Balance: *₹${rentBalance}*\n` +
+               `${depositText}\n` +
+               `👉 *TOTAL BALANCE DUE AT PICKUP: ₹${totalDueAtPickup.toLocaleString('en-IN')}*\n` +
+               `${dueCalculationNote}\n` +
+               `🎒 *Complimentary Inclusions:*\n` +
+               `• 2 Clean Helmets (Rider & Pillion)\n` +
+               `• Mobile Holder & USB Charger\n\n` +
+               `📄 *Required at Pickup:*\n` +
+               `• Original Driving License\n` +
+               `• Original ID Proof (Aadhaar / Passport / Voter ID)\n\n` +
+               `${videoLink ? `🎥 Vehicle Video Tour: ${videoLink}\n\n` : ''}` +
+               `🏢 *Store Hubs:*\n` +
+               `• Siliguri Junction Store: Near Siliguri Junction Station\n` +
+               `• NJP Station Store: Near NJP Railway Station\n` +
+               `📞 Helpline / WhatsApp: +91 9832011223\n\n` +
+               `Ride safe & enjoy the mountains! 🏔️✨`;
       }
       else if (tplKey === 'overdue') {
         const btn = document.getElementById('btnTplOverdue');
