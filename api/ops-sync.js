@@ -30,13 +30,14 @@ export default async function handler(req, res) {
         return res.status(resp.status).json({ error: 'Failed to fetch cloud sync data' });
       }
       const data = await resp.json();
-      return res.status(200).json(data || { bookings: [], fleet_locations: {} });
+      return res.status(200).json(data || { bookings: [], fleet_locations: {}, adhoc_transfers: [] });
     }
 
     if (req.method === 'POST' || req.method === 'PUT') {
       const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       const bookings = payload.bookings || [];
       const fleet_locations = payload.fleet_locations || {};
+      const adhoc_transfers = payload.adhoc_transfers || [];
       const last_updated = new Date().toISOString();
 
       const updateResp = await fetch(CLOUD_STORE_URL, {
@@ -48,6 +49,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           bookings,
           fleet_locations,
+          adhoc_transfers,
           last_updated
         })
       });

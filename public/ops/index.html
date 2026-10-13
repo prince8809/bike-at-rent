@@ -115,6 +115,10 @@
         <i class="fa-solid fa-clipboard-list text-amber-400"></i>
         <span>Bookings (<span id="totalBookingsCount">0</span>)</span>
       </button>
+      <button onclick="switchTab('transfersTab')" id="btn-transfersTab" class="tab-btn px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-1.5 whitespace-nowrap shrink-0 transition">
+        <i class="fa-solid fa-arrow-right-arrow-left text-fuchsia-400"></i>
+        <span>Transfers (<span id="totalTransfersCount" class="font-bold text-amber-300">0</span>)</span>
+      </button>
       <button onclick="switchTab('completedTab')" id="btn-completedTab" class="tab-btn px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 flex items-center space-x-1.5 whitespace-nowrap shrink-0 transition">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span>Completed (<span id="totalCompletedCount">0</span>)</span>
@@ -317,7 +321,7 @@
           <p class="text-xs text-slate-500 mt-0.5">Enter requested customer dates to verify availability before accepting booking or advance payment.</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Pickup (Start) Date</label>
             <input type="date" id="availStartDate" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-red outline-none">
@@ -325,6 +329,14 @@
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Return (End) Date</label>
             <input type="date" id="availEndDate" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Requested Pickup Hub</label>
+            <select id="availPickupStore" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-700 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+              <option value="ALL">All Hubs (Junction & NJP)</option>
+              <option value="NJP Store">🚉 NJP Railway Station Store</option>
+              <option value="Junction Store">🏙️ Siliguri Junction Store</option>
+            </select>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Filter by Model Category</label>
@@ -506,6 +518,92 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB: INTER-STORE TRANSFERS REQUIRED                            -->
+    <!-- ============================================================== -->
+    <div id="transfersTab" class="tab-content hidden space-y-6">
+
+      <!-- Header Row with Quick Actions -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-fuchsia-100 text-fuchsia-700 flex items-center justify-center font-bold text-base">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">Inter-Store Transfers Required</h2>
+            <span id="transfersHeaderBadge" class="ml-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">0 Pending</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Manage physical bike transfers between Siliguri Junction Store & NJP Railway Station Store required before customer pickup.</p>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button onclick="openAdHocTransferModal()" class="w-full sm:w-auto px-4 py-2.5 bg-fuchsia-700 hover:bg-fuchsia-800 active:scale-95 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+            <span>+ Move / Transfer Bike</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Stat Cards Strip -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div onclick="filterTransfers('PENDING')" class="cursor-pointer bg-white p-4 rounded-xl border border-amber-200 bg-amber-50/20 hover:border-amber-400 transition active:scale-95 shadow-xs">
+          <div class="text-xs font-bold text-amber-800 uppercase tracking-wider flex items-center justify-between">
+            <span>⏳ Pending Transfers</span>
+            <i class="fa-solid fa-clock text-amber-500"></i>
+          </div>
+          <div class="text-2xl font-black text-amber-700 mt-1" id="statPendingTransfers">0</div>
+          <div class="text-[11px] text-amber-600 mt-0.5">Need relocation before pickup</div>
+        </div>
+
+        <div onclick="filterTransfers('JN_TO_NJP')" class="cursor-pointer bg-white p-4 rounded-xl border border-fuchsia-200 bg-fuchsia-50/20 hover:border-fuchsia-400 transition active:scale-95 shadow-xs">
+          <div class="text-xs font-bold text-fuchsia-800 uppercase tracking-wider flex items-center justify-between">
+            <span>🏙️ Jn ➔ 🚉 NJP</span>
+            <i class="fa-solid fa-arrow-right text-fuchsia-500"></i>
+          </div>
+          <div class="text-2xl font-black text-fuchsia-700 mt-1" id="statJnToNjp">0</div>
+          <div class="text-[11px] text-fuchsia-600 mt-0.5">Move to NJP Station Hub</div>
+        </div>
+
+        <div onclick="filterTransfers('NJP_TO_JN')" class="cursor-pointer bg-white p-4 rounded-xl border border-violet-200 bg-violet-50/20 hover:border-violet-400 transition active:scale-95 shadow-xs">
+          <div class="text-xs font-bold text-violet-800 uppercase tracking-wider flex items-center justify-between">
+            <span>🚉 NJP ➔ 🏙️ Jn</span>
+            <i class="fa-solid fa-arrow-left text-violet-500"></i>
+          </div>
+          <div class="text-2xl font-black text-violet-700 mt-1" id="statNjpToJn">0</div>
+          <div class="text-[11px] text-violet-600 mt-0.5">Move to Junction Store Hub</div>
+        </div>
+
+        <div onclick="filterTransfers('COMPLETED')" class="cursor-pointer bg-white p-4 rounded-xl border border-emerald-200 bg-emerald-50/20 hover:border-emerald-400 transition active:scale-95 shadow-xs">
+          <div class="text-xs font-bold text-emerald-800 uppercase tracking-wider flex items-center justify-between">
+            <span>✅ Transferred & Ready</span>
+            <i class="fa-solid fa-circle-check text-emerald-500"></i>
+          </div>
+          <div class="text-2xl font-black text-emerald-700 mt-1" id="statCompletedTransfers">0</div>
+          <div class="text-[11px] text-emerald-600 mt-0.5">Arrived at pickup hub</div>
+        </div>
+      </div>
+
+      <!-- Filters & Search Bar -->
+      <div class="bg-white p-3.5 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 custom-scroll text-xs">
+          <button onclick="filterTransfers('ALL')" id="trChip-ALL" class="tr-chip px-3 py-1.5 rounded-full font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 whitespace-nowrap transition">All Transfers</button>
+          <button onclick="filterTransfers('PENDING')" id="trChip-PENDING" class="tr-chip px-3 py-1.5 rounded-full font-bold bg-amber-600 text-white shadow-xs whitespace-nowrap transition">⏳ Pending (<span id="chipPendingCount">0</span>)</button>
+          <button onclick="filterTransfers('JN_TO_NJP')" id="trChip-JN_TO_NJP" class="tr-chip px-3 py-1.5 rounded-full font-semibold bg-fuchsia-50 text-fuchsia-800 border border-fuchsia-200 hover:bg-fuchsia-100 whitespace-nowrap transition">🏙️ Jn ➔ NJP</button>
+          <button onclick="filterTransfers('NJP_TO_JN')" id="trChip-NJP_TO_JN" class="tr-chip px-3 py-1.5 rounded-full font-semibold bg-violet-50 text-violet-800 border border-violet-200 hover:bg-violet-100 whitespace-nowrap transition">🚉 NJP ➔ Jn</button>
+          <button onclick="filterTransfers('COMPLETED')" id="trChip-COMPLETED" class="tr-chip px-3 py-1.5 rounded-full font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 whitespace-nowrap transition">✅ Completed</button>
+        </div>
+        <div class="relative w-full sm:w-64">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="transferSearchInput" oninput="renderTransfersTable()" placeholder="Search plate, model, customer..." class="w-full pl-8 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-fuchsia-500">
+        </div>
+      </div>
+
+      <!-- Transfers List Grid / Table Container -->
+      <div id="transfersListContainer" class="space-y-3">
+        <!-- Rendered via JS -->
       </div>
 
     </div>
@@ -940,7 +1038,7 @@
             <label class="block font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
               <i class="fa-solid fa-location-dot text-brand-red"></i> Pickup Store / Hub
             </label>
-            <select id="formPickupBranch" class="w-full border border-slate-300 rounded-lg p-2.5 font-bold text-slate-800 bg-white focus:ring-2 focus:ring-brand-red outline-none text-xs sm:text-sm">
+            <select id="formPickupBranch" onchange="onModalPickupBranchChange()" class="w-full border border-slate-300 rounded-lg p-2.5 font-bold text-slate-800 bg-white focus:ring-2 focus:ring-brand-red outline-none text-xs sm:text-sm">
               <option value="Junction Store" selected>🏙️ Siliguri Junction Store</option>
               <option value="NJP Store">🚉 NJP Railway Station Store</option>
             </select>
@@ -964,6 +1062,10 @@
           </select>
           <div id="modalConflictAlert" class="hidden mt-2 p-2.5 rounded-lg bg-rose-50 border border-rose-300 text-rose-800 text-xs font-semibold">
             <!-- Conflict alert message -->
+          </div>
+          <!-- Transfer Alert Banner -->
+          <div id="modalTransferBanner" class="hidden mt-2 p-3 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs">
+            <!-- Dynamic transfer alert -->
           </div>
         </div>
 
@@ -1636,6 +1738,70 @@
     </div>
   </div>
 
+  <!-- ============================================================== -->
+  <!-- MODAL: SCHEDULE / LOG AD-HOC VEHICLE TRANSFER                  -->
+  <!-- ============================================================== -->
+  <div id="adHocTransferModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-lg flex items-center space-x-2">
+          <i class="fa-solid fa-truck-ramp-box text-fuchsia-600"></i>
+          <span>Transfer Vehicle Between Stores</span>
+        </h3>
+        <button onclick="closeAdHocTransferModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="adHocTransferForm" onsubmit="saveAdHocTransfer(event)" class="space-y-3 text-xs sm:text-sm">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Select Vehicle to Move</label>
+          <select id="adHocPlate" onchange="onAdHocPlateChange()" required class="w-full border border-slate-300 rounded-lg p-2.5 bg-white font-medium focus:ring-2 focus:ring-fuchsia-500 outline-none text-xs sm:text-sm">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Current Location</label>
+            <input type="text" id="adHocFromStore" readonly class="w-full bg-slate-200/80 border border-slate-300 rounded-lg p-2 font-bold text-slate-700 outline-none text-xs">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Destination Store</label>
+            <select id="adHocToStore" class="w-full border border-slate-300 rounded-lg p-2 font-bold text-slate-900 bg-white focus:ring-2 focus:ring-fuchsia-500 outline-none text-xs">
+              <option value="NJP Store">🚉 NJP Railway Station Store</option>
+              <option value="Junction Store">🏙️ Siliguri Junction Store</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Transfer Reason / Ops Purpose</label>
+          <select id="adHocReason" class="w-full border border-slate-300 rounded-lg p-2.5 bg-white font-medium focus:ring-2 focus:ring-fuchsia-500 outline-none text-xs sm:text-sm">
+            <option value="Fleet Rebalancing / Anticipated Demand">Fleet Rebalancing / Anticipated Demand</option>
+            <option value="Customer Requested Pickup Hub">Customer Requested Pickup Hub</option>
+            <option value="Weekend NJP Station Surge">Weekend NJP Station Surge</option>
+            <option value="Maintenance / Service Hub Relocation">Maintenance / Service Hub Relocation</option>
+            <option value="Special Dispatch">Special Dispatch</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Assigned Rider / Staff Note (Optional)</label>
+          <input type="text" id="adHocNotes" placeholder="e.g. Rider Ramesh moving vehicle at 5 PM" class="w-full border border-slate-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-fuchsia-500 text-xs">
+        </div>
+
+        <div class="flex items-center justify-end space-x-2 pt-3 border-t">
+          <button type="button" onclick="closeAdHocTransferModal()" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg font-semibold text-xs">Cancel</button>
+          <button type="submit" class="px-5 py-2 bg-fuchsia-700 hover:bg-fuchsia-800 text-white rounded-lg font-bold text-xs shadow-sm flex items-center gap-1.5 active:scale-95">
+            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            <span>Transfer Vehicle Now</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2 z-50 transform translate-y-24 opacity-0 transition duration-300 pointer-events-none">
     <i class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -1808,7 +1974,7 @@
     const INITIAL_BOOKINGS = [];
 
     // Production Persistent State: Always preserve existing bookings across sessions
-    const DATA_VERSION = 'v8_ntorq_classification_fixed';
+    const DATA_VERSION = 'v9_interstore_transfers_added';
     if (localStorage.getItem('bar_data_version') !== DATA_VERSION) {
       localStorage.setItem('bar_data_version', DATA_VERSION);
       localStorage.removeItem('bar_fleet');
@@ -1830,6 +1996,7 @@
     });
 
     let bookings = JSON.parse(localStorage.getItem('bar_bookings')) || [];
+    let adhocTransfers = JSON.parse(localStorage.getItem('bar_adhoc_transfers')) || [];
 
     // Cross-Device Cloud Sync Configuration (Real-time Persistence Across Mobile & Web)
     const CLOUD_SYNC_ENDPOINT = '/api/ops-sync';
@@ -1936,10 +2103,17 @@
             });
           }
 
+          // Sync ad-hoc transfers if provided
+          if (cloudData.adhoc_transfers && Array.isArray(cloudData.adhoc_transfers)) {
+            adhocTransfers = cloudData.adhoc_transfers;
+            updated = true;
+          }
+
           if (updated) {
             saveState(true); // Save locally without re-pushing
             renderDashboardTable();
             renderBookingsTable();
+            renderTransfersTable();
             updateKpis();
             if (typeof renderTimeline === 'function') renderTimeline();
             if (!silent) showToast('☁️ Synced with Cloud Server!');
@@ -1964,6 +2138,7 @@
       const payload = {
         bookings: bookings,
         fleet_locations: fleetLocMap,
+        adhoc_transfers: adhocTransfers,
         updated_at: new Date().toISOString()
       };
 
@@ -2011,6 +2186,7 @@
     function saveState(skipCloudPush = false) {
       localStorage.setItem('bar_fleet', JSON.stringify(fleet));
       localStorage.setItem('bar_bookings', JSON.stringify(bookings));
+      localStorage.setItem('bar_adhoc_transfers', JSON.stringify(adhocTransfers));
       if (!skipCloudPush) {
         pushStateToCloud();
       }
@@ -2020,6 +2196,8 @@
     function clearAllBookings() {
       if (confirm('Clear all bookings? This will remove all rental records and reset all 47 vehicles to Available in their respective stores.')) {
         bookings = [];
+        adhocTransfers = [];
+        localStorage.removeItem('bar_adhoc_transfers');
         fleet.forEach((b, idx) => {
           b.location = (idx % 2 === 0) ? 'Junction Store' : 'NJP Store';
         });
@@ -2239,6 +2417,28 @@
       if (document.getElementById('kpiPickup')) document.getElementById('kpiPickup').innerText = pickup;
       if (document.getElementById('kpiUpcoming')) document.getElementById('kpiUpcoming').innerText = futureCount;
       if (document.getElementById('dashChipAllCount')) document.getElementById('dashChipAllCount').innerText = fleet.length;
+
+      // Calculate Inter-Store Transfers
+      const allTransfers = getTransfersList();
+      const pendingTransfers = allTransfers.filter(x => x.status === 'Pending');
+      const jnToNjp = pendingTransfers.filter(x => x.to === 'NJP Store').length;
+      const njpToJn = pendingTransfers.filter(x => x.to === 'Junction Store').length;
+      const completedTransfers = allTransfers.filter(x => x.status === 'Completed').length;
+
+      if (document.getElementById('totalTransfersCount')) document.getElementById('totalTransfersCount').innerText = pendingTransfers.length;
+      if (document.getElementById('statPendingTransfers')) document.getElementById('statPendingTransfers').innerText = pendingTransfers.length;
+      if (document.getElementById('chipPendingCount')) document.getElementById('chipPendingCount').innerText = pendingTransfers.length;
+      if (document.getElementById('statJnToNjp')) document.getElementById('statJnToNjp').innerText = jnToNjp;
+      if (document.getElementById('statNjpToJn')) document.getElementById('statNjpToJn').innerText = njpToJn;
+      if (document.getElementById('statCompletedTransfers')) document.getElementById('statCompletedTransfers').innerText = completedTransfers;
+
+      const headerBadge = document.getElementById('transfersHeaderBadge');
+      if (headerBadge) {
+        headerBadge.innerText = `${pendingTransfers.length} Pending`;
+        headerBadge.className = pendingTransfers.length > 0
+          ? 'ml-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300'
+          : 'ml-2 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200';
+      }
     }
 
     // Tab Switching
@@ -2261,6 +2461,7 @@
       if (tabId === 'dashTab') renderDashboardTable();
       if (tabId === 'availTab') runAvailabilityCheck();
       if (tabId === 'bookingsTab') renderBookingsTable();
+      if (tabId === 'transfersTab') renderTransfersTable();
       if (tabId === 'completedTab') renderCompletedBookingsTable();
       if (tabId === 'timelineTab') renderTimeline();
     }
@@ -2478,6 +2679,16 @@ Current rate: ₹${b.rate}/day
                     <i class="fa-solid fa-arrows-turn-to-dots"></i>
                   </button>
                 </div>
+                ${(() => {
+                  const pendingTr = bookings.find(bk => bk.plate === b.plate && (bk.status === 'Upcoming' || bk.status === 'Active') && (b.location !== bk.pickup_branch || (bk.needs_transfer && bk.transfer_status === 'Pending')));
+                  if (pendingTr) {
+                    const toStore = pendingTr.pickup_branch || (b.location === 'Junction Store' ? 'NJP Store' : 'Junction Store');
+                    return `<button onclick="switchTab('transfersTab')" class="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200 transition">
+                      <i class="fa-solid fa-arrow-right-arrow-left text-[8px]"></i> Move to ${toStore === 'NJP Store' ? 'NJP' : 'Jn'}
+                    </button>`;
+                  }
+                  return '';
+                })()}
               `}
             </td>
             <td class="py-3 px-3">
@@ -2694,6 +2905,7 @@ Current rate: ₹${b.rate}/day
       const end = document.getElementById('availEndDate')?.value;
       const cat = document.getElementById('availCategoryFilter')?.value || document.getElementById('availCategory')?.value || 'ALL';
       const tripType = document.getElementById('availTripType')?.value || 'city';
+      const reqStore = document.getElementById('availPickupStore')?.value || 'ALL';
       const banner = document.getElementById('decisionBanner') || document.getElementById('availDecisionBanner');
       const gridFree = document.getElementById('availBikesGrid');
       const gridBusy = document.getElementById('availBusyGrid');
@@ -2746,6 +2958,8 @@ Current rate: ₹${b.rate}/day
       if (banner) {
         if (availableBikes.length > 0) {
           banner.className = 'p-4 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-900 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm';
+          const atStoreCount = reqStore === 'ALL' ? availableBikes.length : availableBikes.filter(b => b.location === reqStore).length;
+          const trRequiredCount = availableBikes.length - atStoreCount;
           banner.innerHTML = `
           <div>
             <div class="text-base font-extrabold flex items-center gap-2">
@@ -2753,10 +2967,11 @@ Current rate: ₹${b.rate}/day
               <span>ACCEPT BOOKING — ${availableBikes.length} VEHICLES AVAILABLE</span>
             </div>
             <div class="text-xs text-emerald-700 mt-0.5">
-              Available from ${start} to ${end} (${diffDays} ${diffDays === 1 ? 'day' : 'days'}). You can confidently confirm reservation and take advance!
+              Available from ${start} to ${end} (${diffDays} ${diffDays === 1 ? 'day' : 'days'}).
+              ${reqStore !== 'ALL' ? ` (${atStoreCount} at ${reqStore}, ${trRequiredCount} ready with Inter-Store Transfer)` : ' You can confidently confirm reservation and take advance!'}
             </div>
           </div>
-          <button onclick="openBookingWithDates('${start}', '${end}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow transition whitespace-nowrap flex items-center gap-1.5">
+          <button onclick="openBookingWithDates('${start}', '${end}', '${reqStore}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow transition whitespace-nowrap flex items-center gap-1.5">
             <i class="fa-solid fa-plus"></i>
             <span>Quick Book One Now</span>
           </button>
@@ -2808,6 +3023,17 @@ Current rate: ₹${b.rate}/day
               <span class="text-slate-500">Stationed At:</span>
               <span class="font-bold text-purple-800">${b.location === 'NJP Store' ? '🚉 NJP Store' : '🏙️ Junction Store'}</span>
             </div>
+            ${(reqStore !== 'ALL' && b.location !== reqStore) ? `
+              <div class="p-1.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold flex items-center gap-1">
+                <i class="fa-solid fa-arrow-right-arrow-left text-amber-600"></i>
+                <span>Transfer Required: Parked at ${b.location === 'NJP Store' ? 'NJP' : 'Junction'} ➔ Pick up at ${reqStore === 'NJP Store' ? 'NJP' : 'Junction'}</span>
+              </div>
+            ` : (reqStore !== 'ALL' ? `
+              <div class="p-1.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Already Parked at ${reqStore === 'NJP Store' ? 'NJP Hub' : 'Junction Hub'} (Ready)</span>
+              </div>
+            ` : '')}
           </div>
 
           <div class="flex items-center gap-2 pt-1">
@@ -2815,7 +3041,7 @@ Current rate: ₹${b.rate}/day
               <i class="fa-solid fa-copy"></i>
               <span>Video Link</span>
             </button>
-            <button onclick="prefillBookingForPlate('${b.plate}', '${start}', '${end}')" class="flex-1 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+            <button onclick="prefillBookingForPlate('${b.plate}', '${start}', '${end}', '${reqStore !== 'ALL' ? reqStore : ''}')" class="flex-1 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
               <i class="fa-solid fa-check"></i>
               <span>Book Bike</span>
             </button>
@@ -3027,6 +3253,17 @@ Current rate: ₹${b.rate}/day
               <div class="text-[11px] text-slate-500 mt-0.5">
                 ${pickStore === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn'} (${b.pickup_time || '10:00 AM'}) ➔ ${dropStore === 'NJP Store' ? '🚉 NJP' : '🏙️ Jn'} (${b.drop_time || '07:00 PM'})
               </div>
+              ${(() => {
+                const vObj = fleet.find(x => x.plate === b.plate);
+                const curVLoc = (vObj && vObj.location) ? vObj.location : 'Junction Store';
+                const isTrPending = (curVLoc !== pickStore) || (b.needs_transfer && b.transfer_status === 'Pending');
+                if (isTrPending && b.status !== 'Completed' && b.status !== 'Cancelled') {
+                  return `<div class="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 cursor-pointer hover:bg-amber-200" onclick="switchTab('transfersTab')">
+                    <i class="fa-solid fa-arrow-right-arrow-left text-amber-600"></i> Transfer from ${curVLoc === 'NJP Store' ? 'NJP' : 'Jn'} Needed
+                  </div>`;
+                }
+                return '';
+              })()}
               <div class="mt-1">${getRelativeTimingText(b)}</div>
             </td>
             <td class="py-3 px-2 text-center font-bold">${b.days}</td>
@@ -4352,8 +4589,14 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
 
       if (document.getElementById('formPickupTime')) document.getElementById('formPickupTime').value = '10:00 AM';
       if (document.getElementById('formDropTime')) document.getElementById('formDropTime').value = '07:00 PM';
-      if (document.getElementById('formPickupBranch')) document.getElementById('formPickupBranch').value = 'Junction Store';
+      const pBranch = document.getElementById('formPickupBranch');
+      if (pBranch) {
+        pBranch.value = 'Junction Store';
+        pBranch.dataset.explicit = 'false';
+      }
       if (document.getElementById('formDropBranch')) document.getElementById('formDropBranch').value = 'Junction Store';
+      const trBanner = document.getElementById('modalTransferBanner');
+      if (trBanner) trBanner.classList.add('hidden');
 
       const authInput = document.getElementById('formAuthCharge');
       if (authInput) authInput.value = 200;
@@ -4540,10 +4783,12 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
         alertBox.classList.add('hidden');
       }
 
-      // Automatically sync pickup store to vehicle's current store
-      if (b.location && document.getElementById('formPickupBranch')) {
-        document.getElementById('formPickupBranch').value = b.location;
+      // Sync pickup store to vehicle location only if user hasn't explicitly chosen one
+      const pbEl = document.getElementById('formPickupBranch');
+      if (b.location && pbEl && pbEl.dataset.explicit !== 'true') {
+        pbEl.value = b.location;
       }
+      checkModalTransferRequirement();
 
       // Set Rate
       const tripType = document.getElementById('formTripType').value;
@@ -4609,13 +4854,35 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       }
     }
 
-    function prefillBookingForPlate(plate, start, end) {
+    function prefillBookingForPlate(plate, start, end, forcedPickupStore = '') {
       openBookingModal();
       if (start) document.getElementById('formPickupDate').value = start;
       if (end) document.getElementById('formDropDate').value = end;
       onBookingDatesChange();
+      if (forcedPickupStore && forcedPickupStore !== 'ALL') {
+        const pb = document.getElementById('formPickupBranch');
+        if (pb) {
+          pb.value = forcedPickupStore;
+          pb.dataset.explicit = 'true';
+        }
+      }
       document.getElementById('formPlate').value = plate;
       onModalPlateChange();
+    }
+
+    function openBookingWithDates(start, end, forcedStore = '') {
+      openBookingModal();
+      if (start) document.getElementById('formPickupDate').value = start;
+      if (end) document.getElementById('formDropDate').value = end;
+      if (forcedStore && forcedStore !== 'ALL') {
+        const pb = document.getElementById('formPickupBranch');
+        if (pb) {
+          pb.value = forcedStore;
+          pb.dataset.explicit = 'true';
+        }
+      }
+      onBookingDatesChange();
+      updateModalVehicleDropdown();
     }
 
     function saveBookingAndConfirm(e) {
@@ -4631,7 +4898,468 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       saveBookingCore(true);
     }
 
-    function saveBookingCore(showToastAndClose = true) {
+    // -------------------------------------------------------------
+    // INTER-STORE TRANSFER ENGINE & MODAL HANDLERS
+    // -------------------------------------------------------------
+    let currentTransferFilter = 'PENDING';
+
+    function onModalPickupBranchChange() {
+      const pb = document.getElementById('formPickupBranch');
+      if (pb) pb.dataset.explicit = 'true';
+      checkModalTransferRequirement();
+    }
+
+    function checkModalTransferRequirement() {
+      const plate = document.getElementById('formPlate')?.value;
+      const pickupBranch = document.getElementById('formPickupBranch')?.value;
+      const banner = document.getElementById('modalTransferBanner');
+      if (!banner) return;
+      if (!plate || !pickupBranch) {
+        banner.classList.add('hidden');
+        return;
+      }
+      const b = fleet.find(x => x.plate === plate);
+      if (!b) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      const curLoc = b.location || 'Junction Store';
+      if (curLoc !== pickupBranch) {
+        banner.innerHTML = `
+          <div class="flex items-start gap-2.5">
+            <div class="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center shrink-0 mt-0.5 font-bold">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+            </div>
+            <div class="flex-1">
+              <div class="font-extrabold text-amber-950 text-xs flex items-center gap-1.5">
+                <span>🔄 Inter-Store Transfer Required!</span>
+                <span class="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-extrabold uppercase">Auto-Tracked</span>
+              </div>
+              <div class="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                Vehicle <strong>${b.plate}</strong> (${b.model}) is currently stationed at <strong>${curLoc}</strong>.
+                Customer requested pickup at <strong>${pickupBranch}</strong>.
+                This booking will be automatically scheduled in the <strong>Transfers</strong> tab so staff/rider transfers the vehicle before pickup.
+              </div>
+            </div>
+          </div>
+        `;
+        banner.classList.remove('hidden');
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function getTransfersList() {
+      const list = [];
+      const today = getTodayISO();
+
+      // 1. Identify all bookings requiring inter-store transfer
+      bookings.forEach(bk => {
+        if (bk.status === 'Cancelled' || bk.status === 'Completed') return;
+
+        const v = fleet.find(x => x.plate === bk.plate);
+        const curLoc = (v && v.location) ? v.location : 'Junction Store';
+        const pickupLoc = bk.pickup_branch || 'Junction Store';
+
+        // Active bookings have already had their pickup completed
+        if (bk.status === 'Active') {
+          if (bk.needs_transfer && bk.transfer_status === 'Completed') {
+            list.push({
+              id: 'TR-' + bk.id,
+              bookingId: bk.id,
+              type: 'booking',
+              plate: bk.plate,
+              model: bk.model,
+              bike: v,
+              from: bk.transfer_from || (pickupLoc === 'NJP Store' ? 'Junction Store' : 'NJP Store'),
+              to: pickupLoc,
+              pickup_date: bk.pickup_date,
+              pickup_time: bk.pickup_time || '10:00 AM',
+              customer: bk.customer,
+              phone: (bk.country_code || '+91') + ' ' + bk.phone,
+              status: 'Completed',
+              completed_at: bk.transfer_completed_at,
+              booking: bk
+            });
+          }
+          return;
+        }
+
+        const isCompleted = (bk.needs_transfer && bk.transfer_status === 'Completed') || (curLoc === pickupLoc && bk.transfer_to === pickupLoc);
+        const isPending = !isCompleted && (curLoc !== pickupLoc || (bk.needs_transfer && bk.transfer_status === 'Pending'));
+
+        if (isPending) {
+          list.push({
+            id: 'TR-' + bk.id,
+            bookingId: bk.id,
+            type: 'booking',
+            plate: bk.plate,
+            model: bk.model,
+            bike: v,
+            from: curLoc,
+            to: pickupLoc,
+            pickup_date: bk.pickup_date,
+            pickup_time: bk.pickup_time || '10:00 AM',
+            customer: bk.customer,
+            phone: (bk.country_code || '+91') + ' ' + bk.phone,
+            status: 'Pending',
+            booking: bk
+          });
+        } else if (isCompleted) {
+          list.push({
+            id: 'TR-' + bk.id,
+            bookingId: bk.id,
+            type: 'booking',
+            plate: bk.plate,
+            model: bk.model,
+            bike: v,
+            from: bk.transfer_from || (pickupLoc === 'NJP Store' ? 'Junction Store' : 'NJP Store'),
+            to: pickupLoc,
+            pickup_date: bk.pickup_date,
+            pickup_time: bk.pickup_time || '10:00 AM',
+            customer: bk.customer,
+            phone: (bk.country_code || '+91') + ' ' + bk.phone,
+            status: 'Completed',
+            completed_at: bk.transfer_completed_at,
+            booking: bk
+          });
+        }
+      });
+
+      // 2. Identify all ad-hoc / fleet rebalance transfers
+      if (Array.isArray(adhocTransfers)) {
+        adhocTransfers.forEach(tr => {
+          const v = fleet.find(x => x.plate === tr.plate);
+          list.push({
+            ...tr,
+            type: 'adhoc',
+            model: v ? v.model : (tr.model || ''),
+            bike: v
+          });
+        });
+      }
+
+      // Sort: Pending first, then by pickup_date ascending
+      list.sort((a, b) => {
+        if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+        if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+        return (a.pickup_date || '').localeCompare(b.pickup_date || '');
+      });
+
+      return list;
+    }
+
+    function filterTransfers(f) {
+      currentTransferFilter = f;
+      document.querySelectorAll('.tr-chip').forEach(el => {
+        el.className = 'tr-chip px-3 py-1.5 rounded-full font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 whitespace-nowrap transition';
+      });
+      const activeChip = document.getElementById('trChip-' + f);
+      if (activeChip) {
+        if (f === 'PENDING') activeChip.className = 'tr-chip px-3 py-1.5 rounded-full font-bold bg-amber-600 text-white shadow-xs whitespace-nowrap transition';
+        else if (f === 'COMPLETED') activeChip.className = 'tr-chip px-3 py-1.5 rounded-full font-bold bg-emerald-600 text-white shadow-xs whitespace-nowrap transition';
+        else if (f === 'JN_TO_NJP') activeChip.className = 'tr-chip px-3 py-1.5 rounded-full font-bold bg-fuchsia-700 text-white shadow-xs whitespace-nowrap transition';
+        else if (f === 'NJP_TO_JN') activeChip.className = 'tr-chip px-3 py-1.5 rounded-full font-bold bg-violet-700 text-white shadow-xs whitespace-nowrap transition';
+        else activeChip.className = 'tr-chip px-3 py-1.5 rounded-full font-bold bg-slate-800 text-white shadow-xs whitespace-nowrap transition';
+      }
+      renderTransfersTable();
+    }
+
+    function renderTransfersTable() {
+      const container = document.getElementById('transfersListContainer');
+      if (!container) return;
+
+      const all = getTransfersList();
+      const q = (document.getElementById('transferSearchInput')?.value || '').trim().toLowerCase();
+      const today = getTodayISO();
+
+      let filtered = all.filter(tr => {
+        // Status & direction filters
+        if (currentTransferFilter === 'PENDING' && tr.status !== 'Pending') return false;
+        if (currentTransferFilter === 'COMPLETED' && tr.status !== 'Completed') return false;
+        if (currentTransferFilter === 'JN_TO_NJP' && !(tr.from === 'Junction Store' && tr.to === 'NJP Store')) return false;
+        if (currentTransferFilter === 'NJP_TO_JN' && !(tr.from === 'NJP Store' && tr.to === 'Junction Store')) return false;
+
+        // Search query filter
+        if (q) {
+          const match = (tr.plate && tr.plate.toLowerCase().includes(q)) ||
+                        (tr.model && tr.model.toLowerCase().includes(q)) ||
+                        (tr.customer && tr.customer.toLowerCase().includes(q)) ||
+                        (tr.bookingId && tr.bookingId.toLowerCase().includes(q));
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 mx-auto flex items-center justify-center text-xl font-bold">
+              <i class="fa-solid fa-check-double"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">All Vehicles In Correct Physical Hubs</h3>
+              <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">No pending transfers found for selected filter. All reserved bikes are already positioned at their scheduled pickup locations.</p>
+            </div>
+            <button onclick="openAdHocTransferModal()" class="px-4 py-2 bg-fuchsia-700 hover:bg-fuchsia-800 text-white rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+              <i class="fa-solid fa-plus"></i> Move Any Bike Between Stores
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(tr => {
+        const isPending = tr.status === 'Pending';
+        const isToday = tr.pickup_date === today;
+        const isOverdue = tr.pickup_date < today && isPending;
+        const isJnToNjp = tr.to === 'NJP Store';
+
+        let urgencyBadge = '';
+        if (isOverdue) {
+          urgencyBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">🚨 OVERDUE</span>';
+        } else if (isToday) {
+          urgencyBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-600 text-white animate-pulse">⏰ PICKUP TODAY</span>';
+        } else {
+          urgencyBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">📅 ${tr.pickup_date}</span>`;
+        }
+
+        html += `
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border ${isPending ? 'border-amber-300 shadow-sm' : 'border-slate-200'} space-y-3 transition hover:border-fuchsia-400">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-9 h-9 rounded-xl ${isJnToNjp ? 'bg-fuchsia-100 text-fuchsia-800' : 'bg-violet-100 text-violet-800'} flex items-center justify-center font-bold text-base">
+                  <i class="fa-solid ${isJnToNjp ? 'fa-arrow-right' : 'fa-arrow-left'}"></i>
+                </span>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-black text-slate-900 text-base font-mono tracking-wide">${tr.plate}</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${tr.bike && tr.bike.plate_type === 'Commercial' ? 'badge-comm' : 'badge-pv'}">
+                      ${tr.bike && tr.bike.plate_type === 'Commercial' ? 'Commercial' : 'Conversion'}
+                    </span>
+                    ${isPending ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Transfer Required</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Transferred & Ready</span>'}
+                  </div>
+                  <div class="text-xs text-slate-500 font-medium">${tr.model || ''}</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                ${urgencyBadge}
+                ${tr.bookingId ? `
+                  <button onclick="editBooking('${tr.bookingId}')" class="text-xs font-mono font-bold text-brand-red hover:underline bg-rose-50 px-2 py-1 rounded border border-rose-200">
+                    ${tr.bookingId}
+                  </button>
+                ` : '<span class="text-xs text-slate-500 font-semibold bg-slate-100 px-2 py-1 rounded">Ad-hoc Rebalance</span>'}
+              </div>
+            </div>
+
+            <!-- Route Diagram & Transfer Logistics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs">
+              <div class="space-y-0.5">
+                <span class="text-[10px] font-bold uppercase text-slate-400">Current / From Station</span>
+                <div class="font-extrabold text-slate-800 flex items-center gap-1.5">
+                  <span>${tr.from === 'NJP Store' ? '🚉 NJP Railway Station Store' : '🏙️ Siliguri Junction Store'}</span>
+                </div>
+                <div class="text-[10px] text-slate-500">Vehicle currently parked here</div>
+              </div>
+
+              <div class="space-y-0.5 flex flex-col justify-center items-start md:items-center">
+                <div class="flex items-center gap-1.5 font-bold text-fuchsia-700 bg-fuchsia-50 px-2.5 py-1 rounded-full border border-fuchsia-200">
+                  <i class="fa-solid fa-truck-fast"></i>
+                  <span>${isJnToNjp ? 'Move Junction ➔ NJP' : 'Move NJP ➔ Junction'}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5">Physical Store Relocation</div>
+              </div>
+
+              <div class="space-y-0.5 md:text-right">
+                <span class="text-[10px] font-bold uppercase text-slate-400">Destination Pickup Hub</span>
+                <div class="font-extrabold text-emerald-800 flex items-center md:justify-end gap-1.5">
+                  <span>${tr.to === 'NJP Store' ? '🚉 NJP Railway Station Store' : '🏙️ Siliguri Junction Store'}</span>
+                </div>
+                <div class="text-[10px] text-slate-500">Required before ${tr.pickup_date} (${tr.pickup_time || '10:00 AM'})</div>
+              </div>
+            </div>
+
+            <!-- Customer & Action Bar -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-1">
+              <div class="text-xs text-slate-600 flex items-center gap-2">
+                ${tr.customer ? `
+                  <span>Customer: <strong class="text-slate-800">${tr.customer}</strong> (${tr.phone})</span>
+                ` : `
+                  <span>Reason: <strong class="text-slate-800">${tr.reason || 'Fleet Relocation'}</strong></span>
+                `}
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button onclick="dispatchTransferWhatsApp('${tr.id}')" title="Send WhatsApp Transfer Order to Rider" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                  <i class="fa-brands fa-whatsapp text-sm"></i>
+                  <span>WhatsApp Rider</span>
+                </button>
+
+                ${isPending ? `
+                  <button onclick="executeTransfer('${tr.id}')" title="Mark physical transfer completed" class="px-4 py-1.5 bg-fuchsia-700 hover:bg-fuchsia-800 active:scale-95 text-white rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Mark Transferred to ${tr.to === 'NJP Store' ? 'NJP' : 'Junction'}</span>
+                  </button>
+                ` : `
+                  <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
+                    <i class="fa-solid fa-check"></i> Transferred & Parked at ${tr.to === 'NJP Store' ? 'NJP' : 'Junction'}
+                  </span>
+                `}
+              </div>
+            </div>
+
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function executeTransfer(trId) {
+      const all = getTransfersList();
+      const tr = all.find(x => x.id === trId);
+      if (!tr) return;
+
+      const b = fleet.find(x => x.plate === tr.plate);
+      if (!b) return;
+
+      const targetStore = tr.to;
+      if (!confirm(`Confirm physical transfer of vehicle ${b.plate} (${b.model}) to ${targetStore}?`)) {
+        return;
+      }
+
+      // Update vehicle location
+      b.location = targetStore;
+
+      // Update booking transfer record
+      if (tr.bookingId) {
+        const bk = bookings.find(x => x.id === tr.bookingId);
+        if (bk) {
+          bk.needs_transfer = true;
+          bk.transfer_status = 'Completed';
+          bk.transfer_completed_at = new Date().toISOString();
+          bk.transfer_from = tr.from;
+          bk.transfer_to = tr.to;
+        }
+      }
+
+      // Update adhoc record if adhoc
+      if (tr.type === 'adhoc') {
+        const adhoc = adhocTransfers.find(x => x.id === tr.id);
+        if (adhoc) {
+          adhoc.status = 'Completed';
+          adhoc.completed_at = new Date().toISOString();
+        }
+      }
+
+      saveState();
+      showToast(`✅ Vehicle ${b.plate} successfully transferred to ${targetStore}!`);
+      renderTransfersTable();
+      renderDashboardTable();
+      renderBookingsTable();
+      updateKpis();
+    }
+
+    function dispatchTransferWhatsApp(trId) {
+      const all = getTransfersList();
+      const tr = all.find(x => x.id === trId);
+      if (!tr) return;
+
+      const text = `🚨 *BIKE AT RENT — STORE TRANSFER ORDER*
+────────────────────────
+🏍️ *Vehicle:* ${tr.plate} (${tr.model || ''})
+📍 *Pick Up From:* ${tr.from}
+🏁 *Transfer To:* ${tr.to}
+⏰ *Required Before:* ${tr.pickup_date}${tr.pickup_time ? ' at ' + tr.pickup_time : ''}
+📋 *Booking Reference:* ${tr.bookingId || 'Ad-hoc Fleet Rebalance'}${tr.customer ? ' (' + tr.customer + ')' : ''}
+────────────────────────
+Staff / Rider: Please move this vehicle to ${tr.to} and notify the store manager once parked safely.`;
+
+      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    // Ad-Hoc Transfer Modal Functions
+    function openAdHocTransferModal() {
+      const sel = document.getElementById('adHocPlate');
+      if (!sel) return;
+
+      let html = '<option value="">-- Choose Vehicle to Move --</option>';
+      fleet.forEach(b => {
+        html += `<option value="${b.plate}">${b.plate} — ${b.model} (${b.location || 'Junction Store'})</option>`;
+      });
+      sel.innerHTML = html;
+
+      document.getElementById('adHocFromStore').value = '';
+      document.getElementById('adHocNotes').value = '';
+      document.getElementById('adHocTransferModal').classList.remove('hidden');
+    }
+
+    function closeAdHocTransferModal() {
+      const m = document.getElementById('adHocTransferModal');
+      if (m) m.classList.add('hidden');
+    }
+
+    function onAdHocPlateChange() {
+      const plate = document.getElementById('adHocPlate').value;
+      const b = fleet.find(x => x.plate === plate);
+      if (!b) return;
+
+      const curLoc = b.location || 'Junction Store';
+      document.getElementById('adHocFromStore').value = curLoc;
+      document.getElementById('adHocToStore').value = (curLoc === 'Junction Store') ? 'NJP Store' : 'Junction Store';
+    }
+
+    function saveAdHocTransfer(e) {
+      if (e && e.preventDefault) e.preventDefault();
+
+      const plate = document.getElementById('adHocPlate').value;
+      if (!plate) {
+        alert('Please select a vehicle to transfer!');
+        return;
+      }
+
+      const b = fleet.find(x => x.plate === plate);
+      if (!b) return;
+
+      const fromStore = document.getElementById('adHocFromStore').value;
+      const toStore = document.getElementById('adHocToStore').value;
+      const reason = document.getElementById('adHocReason').value;
+      const notes = document.getElementById('adHocNotes').value.trim();
+
+      // Physically update vehicle location
+      b.location = toStore;
+
+      // Add to adhocTransfers log
+      const newTr = {
+        id: 'TR-ADHOC-' + Date.now(),
+        type: 'adhoc',
+        plate: plate,
+        model: b.model,
+        from: fromStore,
+        to: toStore,
+        reason: reason,
+        notes: notes,
+        status: 'Completed',
+        completed_at: new Date().toISOString(),
+        pickup_date: getTodayISO(),
+        pickup_time: 'Immediate'
+      };
+
+      adhocTransfers.push(newTr);
+      saveState();
+
+      closeAdHocTransferModal();
+      showToast(`✅ Vehicle ${plate} moved to ${toStore}!`);
+      renderTransfersTable();
+      renderDashboardTable();
+      renderBookingsTable();
+      updateKpis();
+    }
+
+        function saveBookingCore(showToastAndClose = true) {
       const p = document.getElementById('formPlate').value;
       if (!p) {
         alert('Please select a valid available vehicle!');
@@ -4726,7 +5454,12 @@ Please select another vehicle.`);
         deposit: document.getElementById('formDeposit').value,
         helmets: 2, // 2 free helmets per agreement policy
         status: selectedStatus,
-        destination: document.getElementById('formDestination').value
+        destination: document.getElementById('formDestination').value,
+        needs_transfer: (b && b.location && b.location !== pickupStore),
+        transfer_from: (b && b.location) ? b.location : 'Junction Store',
+        transfer_to: pickupStore,
+        transfer_status: (b && b.location && b.location !== pickupStore) ? 'Pending' : 'None',
+        transfer_completed_at: null
       };
 
       if (editingId) {
@@ -5718,6 +6451,7 @@ Please select another vehicle.`);
       updateKpis();
       renderDashboardTable();
       renderBookingsTable();
+      renderTransfersTable();
       renderCompletedBookingsTable();
       runAvailabilityCheck();
 
