@@ -3558,7 +3558,7 @@ function renderCatalogHtml() {
   <div id="toast" class="toast">Link copied to clipboard!</div>
 
   <script>
-    const items = ` + itemsJson + `;
+    const items = ${itemsJson};
     const grid = document.getElementById('fleetGrid');
     const searchInput = document.getElementById('searchInput');
     const shownCount = document.getElementById('shownCount');
@@ -3695,7 +3695,7 @@ export default async function handler(req, res) {
 </head>
 <body>
   <h1>Vehicle Video Asset Not Found</h1>
-  <p>Could not locate showcase video for "<strong>` + cleanSlug + `</strong>".</p>
+  <p>Could not locate showcase video for "<strong>${cleanSlug}</strong>".</p>
   <a href="/assetDir">Browse All 47 Fleet Videos in Asset Directory</a>
 </body>
 </html>`);
