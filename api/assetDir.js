@@ -3588,7 +3588,7 @@ function renderCatalogHtml() {
             '<a href="/assetDir/' + encodeURIComponent(item.slug) + '" target="_blank" rel="noopener" class="btn btn-primary">' +
               '🎬 Watch Video' +
             '</a>' +
-            '<button onclick="copyLink(\'' + item.slug + '\')" class="btn btn-secondary">' +
+            '<button type="button" data-slug="' + item.slug + '" class="btn btn-secondary btn-copy">' +
               '📋 Copy Link' +
             '</button>' +
           '</div>' +
@@ -3604,6 +3604,13 @@ function renderCatalogHtml() {
         setTimeout(function() { toast.classList.remove('show'); }, 2500);
       });
     }
+
+    grid.addEventListener('click', function(e) {
+      var btn = e.target.closest('.btn-copy');
+      if (btn) {
+        copyLink(btn.getAttribute('data-slug'));
+      }
+    });
 
     searchInput.addEventListener('input', function(e) {
       const q = e.target.value.toLowerCase().trim();
