@@ -803,12 +803,13 @@
           <div class="border border-purple-200 bg-purple-50/40 p-4 rounded-xl space-y-2">
             <h3 class="font-bold text-purple-900 text-sm flex items-center space-x-1.5">
               <i class="fa-solid fa-video text-purple-600"></i>
-              <span>WhatsApp Showcase Video Sending Rule</span>
+              <span>Official Fleet Video Showcase Links</span>
             </h3>
             <ul class="text-xs space-y-1 text-purple-900/90 list-disc list-inside">
-              <li>All 47 vehicles have dedicated <strong>under-30-second HD showcase clips</strong>.</li>
-              <li>When customer asks for videos of a model (e.g. "Xpulse ka video bhejo"), staff/bot sends <strong>all available videos</strong> for that model.</li>
-              <li>Include disclaimer: <em>"Exact bike/color choice is subject to availability at pickup; an available vehicle from this model will be allocated."</em></li>
+              <li>All 47 vehicles use official branded links: <strong>https://bikeatrent.com/assetDir/&lt;slug&gt;</strong> or <strong>https://bikeatrent.com/v/&lt;plate&gt;</strong>.</li>
+              <li>Redirects customers directly to HD walkarounds on Google Drive with <strong>zero link hallucinations</strong>.</li>
+              <li>Full interactive catalog browseable at <a href="/assetDir" target="_blank" class="underline font-bold text-purple-800">bikeatrent.com/assetDir</a>.</li>
+              <li>Include disclaimer: <em>"Exact bike/color choice is subject to live availability at pickup; an available vehicle from this model will be allocated."</em></li>
             </ul>
           </div>
 
@@ -5241,7 +5242,12 @@ Please select another vehicle.`);
       if (!currentReminderBooking) return;
       const b = currentReminderBooking;
       const v = fleet.find(x => x.plate === b.plate);
-      const videoLink = v ? v.link : '';
+      let videoLink = '';
+      if (v) {
+        if (v.slug) videoLink = `https://bikeatrent.com/assetDir/${v.slug}`;
+        else if (v.link && v.link.includes('bikeatrent.com')) videoLink = v.link;
+        else videoLink = `https://bikeatrent.com/v/${v.plate}`;
+      }
 
       document.querySelectorAll('.tpl-btn').forEach(btn => {
         btn.className = 'tpl-btn p-2 rounded-lg border text-left font-semibold transition bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100';
@@ -5294,40 +5300,32 @@ Please select another vehicle.`);
           depositText = `• Security Deposit: *${depositRaw}*\n`;
         }
 
-        let dueCalculationNote = '';
-        if (depositNum > 0) {
-          dueCalculationNote = `_(Rent Balance ₹${rentBalance} + Refundable Deposit ₹${depositNum.toLocaleString('en-IN')})_\n`;
-        }
+        const authLine = auth > 0 ? `• Permit/Authorisation Fee: *₹${auth}*\n` : '';
+        const dueBreakdown = depositNum > 0 ? ` _(Rent ₹${rentBalance} + Deposit ₹${depositNum.toLocaleString('en-IN')})_` : '';
 
         text = `*BIKE AT RENT SILIGURI — BOOKING CONFIRMATION* 🏍️\n\n` +
                `Booking ID: *${b.id}*\n` +
                `Customer: *${b.customer}*\n` +
                `Vehicle: *${b.model} (${b.plate})*\n\n` +
                `📅 *Trip Schedule:*\n` +
-               `• Pickup Store: *${pickStore}* on *${b.pickup_date}* at *${b.pickup_time || '10:00 AM'}*\n` +
-               `• Drop Store: *${dropStore}* by *${b.drop_date}* (${b.drop_time || '07:00 PM'})\n` +
+               `• Pickup: *${pickStore}* on *${b.pickup_date}* (${b.pickup_time || '10:00 AM'})\n` +
+               `• Drop: *${dropStore}* by *${b.drop_date}* (${b.drop_time || '07:00 PM'})\n` +
                `• Duration: *${days} Days* @ ₹${rate}/day\n\n` +
-               `💰 *Rental & Payment Breakdown:*\n` +
+               `💰 *Payment Breakdown:*\n` +
                `• Base Rent (${days}d × ₹${rate}): *₹${baseRent}*\n` +
-               `• Authorisation / Permit Fee: *₹${auth}*\n` +
+               `${authLine}` +
                `${extrasLine}` +
                `• Total Rental Amount: *₹${totalRent}*\n` +
                `• Advance Paid: *-₹${adv}*\n` +
                `• Remaining Rental Balance: *₹${rentBalance}*\n` +
-               `${depositText}\n` +
-               `👉 *TOTAL BALANCE DUE AT PICKUP: ₹${totalDueAtPickup.toLocaleString('en-IN')}*\n` +
-               `${dueCalculationNote}\n` +
-               `🎒 *Complimentary Inclusions:*\n` +
-               `• 2 Clean Helmets (Rider & Pillion)\n` +
-               `• Mobile Holder & USB Charger\n\n` +
+               `${depositText}` +
+               `👉 *TOTAL BALANCE DUE AT PICKUP: ₹${totalDueAtPickup.toLocaleString('en-IN')}*${dueBreakdown}\n\n` +
                `📄 *Required at Pickup:*\n` +
                `• Original Driving License\n` +
-               `• Original ID Proof (Aadhaar / Passport / Voter ID)\n\n` +
-               `${videoLink ? `🎥 Vehicle Video Tour: ${videoLink}\n\n` : ''}` +
-               `🏢 *Store Hubs:*\n` +
-               `• Siliguri Junction Store: Near Siliguri Junction Station\n` +
-               `• NJP Station Store: Near NJP Railway Station\n` +
-               `📞 Helpline / WhatsApp: +91 9832011223\n\n` +
+               `• Original ID Proof (Aadhaar / Passport / Voter ID)\n` +
+               `• 1 Passport Size Photo\n\n` +
+               `${videoLink ? `🎥 Vehicle Showcase: ${videoLink}\n\n` : ''}` +
+               `📞 Helpline / WhatsApp: +91 9832011223\n` +
                `Ride safe & enjoy the mountains! 🏔️✨`;
       }
       else if (tplKey === 'overdue') {
@@ -5364,15 +5362,24 @@ Please select another vehicle.`);
       });
     }
 
-    function copyVideoLink(link) {
-      if (!link) {
+    function copyVideoLink(linkOrPlate) {
+      if (!linkOrPlate) {
         alert('No showcase video link registered for this vehicle.');
         return;
       }
-      navigator.clipboard.writeText(link).then(() => {
-        showToast('Showcase video link copied!');
+      let target = linkOrPlate;
+      if (!target.startsWith('http')) {
+        const v = fleet.find(x => x.plate === target || x.slug === target);
+        if (v && v.slug) target = `https://bikeatrent.com/assetDir/${v.slug}`;
+        else target = `https://bikeatrent.com/v/${target}`;
+      } else if (target.includes('drive.google.com')) {
+        const v = fleet.find(x => x.link === target || x.drive_link === target);
+        if (v && v.slug) target = `https://bikeatrent.com/assetDir/${v.slug}`;
+      }
+      navigator.clipboard.writeText(target).then(() => {
+        showToast('Showcase video link copied: ' + target);
       }).catch(() => {
-        prompt('Copy link:', link);
+        prompt('Copy link:', target);
       });
     }
 
