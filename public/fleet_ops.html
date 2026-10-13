@@ -1974,7 +1974,7 @@
     const INITIAL_BOOKINGS = [];
 
     // Production Persistent State: Always preserve existing bookings across sessions
-    const DATA_VERSION = 'v9_interstore_transfers_added';
+    const DATA_VERSION = 'v10_retransfer_auto_detect';
     if (localStorage.getItem('bar_data_version') !== DATA_VERSION) {
       localStorage.setItem('bar_data_version', DATA_VERSION);
       localStorage.removeItem('bar_fleet');
@@ -2510,6 +2510,8 @@
         b.location = target;
         saveState();
         renderDashboardTable();
+        renderBookingsTable();
+        renderTransfersTable();
         updateKpis();
         showToast(`Vehicle ${b.plate} moved to ${target}!`);
       }
@@ -4986,10 +4988,20 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
           return;
         }
 
-        const isCompleted = (bk.needs_transfer && bk.transfer_status === 'Completed') || (curLoc === pickupLoc && bk.transfer_to === pickupLoc);
-        const isPending = !isCompleted && (curLoc !== pickupLoc || (bk.needs_transfer && bk.transfer_status === 'Pending'));
+        // PHYSICAL STORE LOCATION DETERMINES REALITY:
+        // If current vehicle location != pickup store, transfer is ALWAYS PENDING!
+        // Even if it was previously marked transferred, if it has been moved away/transferred back, it MUST be re-transferred!
+        const isPhysicallyAtPickupStore = (curLoc === pickupLoc);
+        const wasPreviouslyTransferred = (bk.needs_transfer && bk.transfer_status === 'Completed');
+        const isMovedBack = !isPhysicallyAtPickupStore && wasPreviouslyTransferred;
 
-        if (isPending) {
+        if (!isPhysicallyAtPickupStore) {
+          // If vehicle was transferred back / moved away, re-open transfer as Pending
+          if (bk.needs_transfer && bk.transfer_status === 'Completed') {
+            bk.transfer_status = 'Pending';
+            bk.transfer_from = curLoc;
+          }
+
           list.push({
             id: 'TR-' + bk.id,
             bookingId: bk.id,
@@ -5004,9 +5016,10 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
             customer: bk.customer,
             phone: (bk.country_code || '+91') + ' ' + bk.phone,
             status: 'Pending',
+            isMovedBack: isMovedBack,
             booking: bk
           });
-        } else if (isCompleted) {
+        } else if (bk.needs_transfer) {
           list.push({
             id: 'TR-' + bk.id,
             bookingId: bk.id,
@@ -5127,7 +5140,7 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
         }
 
         html += `
-          <div class="bg-white p-4 sm:p-5 rounded-2xl border ${isPending ? 'border-amber-300 shadow-sm' : 'border-slate-200'} space-y-3 transition hover:border-fuchsia-400">
+          <div class="bg-white p-4 sm:p-5 rounded-2xl border ${tr.isMovedBack ? 'border-rose-300 shadow-sm' : (isPending ? 'border-amber-300 shadow-sm' : 'border-slate-200')} space-y-3 transition hover:border-fuchsia-400">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <div class="flex items-center gap-2.5">
                 <span class="w-9 h-9 rounded-xl ${isJnToNjp ? 'bg-fuchsia-100 text-fuchsia-800' : 'bg-violet-100 text-violet-800'} flex items-center justify-center font-bold text-base">
@@ -5139,7 +5152,7 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
                     <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${tr.bike && tr.bike.plate_type === 'Commercial' ? 'badge-comm' : 'badge-pv'}">
                       ${tr.bike && tr.bike.plate_type === 'Commercial' ? 'Commercial' : 'Conversion'}
                     </span>
-                    ${isPending ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Transfer Required</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Transferred & Ready</span>'}
+                    ${tr.isMovedBack ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300">🔄 Transferred Back ➔ Re-Transfer Required</span>' : (isPending ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Transfer Required</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">✅ Transferred & Ready</span>')}
                   </div>
                   <div class="text-xs text-slate-500 font-medium">${tr.model || ''}</div>
                 </div>
@@ -5162,6 +5175,7 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
                   <span>${tr.from === 'NJP Store' ? '🚉 NJP Railway Station Store' : '🏙️ Siliguri Junction Store'}</span>
                 </div>
                 <div class="text-[10px] text-slate-500">Vehicle currently parked here</div>
+                ${tr.isMovedBack ? '<div class="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded mt-1">⚠️ Moved back after transfer!</div>' : ''}
               </div>
 
               <div class="space-y-0.5 flex flex-col justify-center items-start md:items-center">
@@ -5200,7 +5214,7 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
                 ${isPending ? `
                   <button onclick="executeTransfer('${tr.id}')" title="Mark physical transfer completed" class="px-4 py-1.5 bg-fuchsia-700 hover:bg-fuchsia-800 active:scale-95 text-white rounded-lg text-xs font-extrabold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-circle-check"></i>
-                    <span>Mark Transferred to ${tr.to === 'NJP Store' ? 'NJP' : 'Junction'}</span>
+                    <span>${tr.isMovedBack ? 'Re-Transfer' : 'Mark Transferred'} to ${tr.to === 'NJP Store' ? 'NJP' : 'Junction'}</span>
                   </button>
                 ` : `
                   <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
