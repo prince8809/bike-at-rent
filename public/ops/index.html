@@ -1796,25 +1796,25 @@
     const INITIAL_BOOKINGS = [];
 
     // Production Persistent State: Always preserve existing bookings across sessions
-    const DATA_VERSION = 'v7_persistent_cloud_sync';
+    const DATA_VERSION = 'v8_ntorq_classification_fixed';
     if (localStorage.getItem('bar_data_version') !== DATA_VERSION) {
       localStorage.setItem('bar_data_version', DATA_VERSION);
+      localStorage.removeItem('bar_fleet');
     }
 
-    // Load from LocalStorage with Deep Clone Fallback
-    let fleet = JSON.parse(localStorage.getItem('bar_fleet')) || JSON.parse(JSON.stringify(INITIAL_FLEET));
-    
-    // Ensure each vehicle has an assigned store location (Strictly 2 Stores: Junction Store and NJP Store)
-    fleet.forEach((b, idx) => {
-      const init = INITIAL_FLEET.find(x => x.plate === b.plate);
-      if (init) {
-        b.plate_type = init.plate_type || 'Commercial';
-        b.mountain_rate = init.mountain_rate || (b.is_scooter ? b.rate + 100 : b.rate);
+    // Always use INITIAL_FLEET as authoritative source of truth for vehicle specifications, categories & rates,
+    // preserving physical store locations from previous sessions.
+    const savedFleet = JSON.parse(localStorage.getItem('bar_fleet')) || [];
+    let fleet = INITIAL_FLEET.map((init, idx) => {
+      const existing = savedFleet.find(x => x.plate === init.plate);
+      let loc = existing && existing.location ? existing.location : init.location;
+      if (!loc || (loc !== 'Junction Store' && loc !== 'NJP Store')) {
+        loc = (idx % 2 === 0) ? 'Junction Store' : 'NJP Store';
       }
-      if (!b.location || (b.location !== 'Junction Store' && b.location !== 'NJP Store')) {
-        // Distribute fleet evenly between the 2 physical stores
-        b.location = (idx % 2 === 0) ? 'Junction Store' : 'NJP Store';
-      }
+      return {
+        ...init,
+        location: loc
+      };
     });
 
     let bookings = JSON.parse(localStorage.getItem('bar_bookings')) || [];
