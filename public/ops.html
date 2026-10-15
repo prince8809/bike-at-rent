@@ -364,11 +364,64 @@
             </select>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Rental Type</label>
-            <select id="availTripType" onchange="runAvailabilityCheck()" class="w-full text-sm border border-slate-300 rounded-lg p-2.5 bg-white text-slate-700 font-medium focus:ring-2 focus:ring-brand-red outline-none">
+            <label class="block text-xs font-semibold text-slate-600 mb-1 flex items-center justify-between">
+              <span>Rental Terrain Type</span>
+              <span id="availTripTypeBadge" class="text-[10px] text-amber-700 font-bold">Mountain (+₹100 scooters)</span>
+            </label>
+            <!-- Sleek Switch / Segmented Toggle -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button type="button" id="btnAvailMountain" onclick="setAvailTripType('mountain')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-brand-red text-white shadow-sm">
+                <i class="fa-solid fa-mountain"></i>
+                <span>Mountain Ride</span>
+              </button>
+              <button type="button" id="btnAvailCity" onclick="setAvailTripType('city')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900">
+                <i class="fa-solid fa-city"></i>
+                <span>Local City</span>
+              </button>
+            </div>
+            <select id="availTripType" onchange="onAvailTripTypeDropdownChange()" class="hidden">
+              <option value="mountain" selected>Mountain / Hills Ride (+₹100 for scooters)</option>
               <option value="city">Local Siliguri City Ride</option>
-              <option value="mountain">Mountain / Hills Ride (+₹100 for scooters)</option>
             </select>
+          </div>
+        </div>
+
+        <!-- Add-ons & Accessories for Cost Estimation Bar -->
+        <div class="p-3 bg-gradient-to-r from-slate-50 to-amber-50/40 rounded-xl border border-slate-200 space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span class="font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-vest text-amber-600"></i>
+              <span>Estimate Accessories & Extra Gear Cost:</span>
+            </span>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[10px] text-slate-500 font-semibold mr-1">Quick Select:</span>
+              <button type="button" onclick="setAvailExtras(0, '')" class="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium">None (₹0)</button>
+              <button type="button" onclick="setAvailExtras(100, 'Mobile Mount')" class="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-amber-100 font-medium">+ Mount (₹100)</button>
+              <button type="button" onclick="setAvailExtras(200, '1 Riding Jacket')" class="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-amber-100 font-medium">+ 1 Jacket (₹200)</button>
+              <button type="button" onclick="setAvailExtras(300, 'Jacket + Knee Guards')" class="text-[10px] px-2 py-0.5 rounded bg-white border border-slate-300 text-slate-700 hover:bg-amber-100 font-medium">+ Jacket+Guards (₹300)</button>
+              <button type="button" onclick="setAvailExtras(500, 'Full Gear (2 Jackets + Guards)')" class="text-[10px] px-2 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-900 hover:bg-amber-200 font-bold">+ Full Kit (₹500)</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-200/80">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Accessories Cost (₹)</label>
+              <div class="relative">
+                <span class="absolute left-2.5 top-1.5 text-xs text-slate-400 font-bold">₹</span>
+                <input type="number" id="availExtraCharge" value="0" min="0" oninput="runAvailabilityCheck()" onchange="runAvailabilityCheck()" placeholder="0" class="w-full pl-6 pr-2 py-1.5 text-xs border border-slate-300 rounded-lg font-bold text-slate-900 bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+              </div>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Accessories / Gear Description</label>
+              <input type="text" id="availExtraNote" oninput="runAvailabilityCheck()" placeholder="e.g. 2 Riding Jackets + Knee Guards, Mobile Mount" class="w-full border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:ring-2 focus:ring-amber-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Govt Permit / Auth Fee</label>
+              <select id="availAuthCharge" onchange="runAvailabilityCheck()" class="w-full border border-slate-300 rounded-lg px-2 py-1.5 text-xs bg-white font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 outline-none">
+                <option value="200" selected>₹200 Std Sikkim/Hills Auth</option>
+                <option value="100">₹100 Discounted Auth</option>
+                <option value="0">₹0 Waived Auth Fee</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -1094,10 +1147,24 @@
             </div>
           </div>
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Trip Terrain Type</label>
-            <select id="formTripType" onchange="onModalTripTypeChange()" class="w-full border border-slate-300 rounded-lg p-2.5 bg-white font-medium focus:ring-2 focus:ring-brand-red outline-none">
+            <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+              <span>Trip Terrain Type</span>
+              <span id="modalTripTypeRateHint" class="text-[10px] text-amber-700 font-bold">Mountain (+₹100 scooters)</span>
+            </label>
+            <!-- Sleek Switch / Segmented Toggle -->
+            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button type="button" id="btnModalMountain" onclick="setModalTripType('mountain')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-brand-red text-white shadow-sm">
+                <i class="fa-solid fa-mountain"></i>
+                <span>Mountain (Std)</span>
+              </button>
+              <button type="button" id="btnModalCity" onclick="setModalTripType('city')" class="flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900">
+                <i class="fa-solid fa-city"></i>
+                <span>Local City</span>
+              </button>
+            </div>
+            <select id="formTripType" onchange="onModalTripTypeChange()" class="hidden">
+              <option value="mountain" selected>Mountain / Hills Ride (+₹100 for scooters)</option>
               <option value="city">Local Siliguri City Ride</option>
-              <option value="mountain">Mountain / Hills Ride (+₹100 for scooters)</option>
             </select>
           </div>
         </div>
@@ -1111,17 +1178,26 @@
             </span>
             <span class="text-[11px] text-slate-400 font-normal">Optional</span>
           </div>
+          <!-- Quick Selection Chips -->
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span class="text-[10px] text-slate-400 font-semibold mr-1">Quick Select:</span>
+            <button type="button" onclick="setModalExtraCharge(0, '')" class="text-[10px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold border border-slate-200">Clear (₹0)</button>
+            <button type="button" onclick="setModalExtraCharge(100, 'Mobile Mount')" class="text-[10px] px-2 py-0.5 rounded bg-white hover:bg-amber-100 text-slate-700 font-bold border border-slate-300">+ Mount (₹100)</button>
+            <button type="button" onclick="setModalExtraCharge(200, '1 Riding Jacket')" class="text-[10px] px-2 py-0.5 rounded bg-white hover:bg-amber-100 text-slate-700 font-bold border border-slate-300">+ 1 Jacket (₹200)</button>
+            <button type="button" onclick="setModalExtraCharge(300, 'Jacket + Knee Guards')" class="text-[10px] px-2 py-0.5 rounded bg-white hover:bg-amber-100 text-slate-700 font-bold border border-slate-300">+ Jacket+Guards (₹300)</button>
+            <button type="button" onclick="setModalExtraCharge(500, 'Full Gear (2 Jackets + Guards)')" class="text-[10px] px-2 py-0.5 rounded bg-amber-100 hover:bg-amber-200 text-amber-900 font-extrabold border border-amber-300">+ Full Kit (₹500)</button>
+          </div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div class="sm:col-span-1">
               <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Extra Charge (₹)</label>
               <div class="relative">
                 <span class="absolute left-2.5 top-2 text-xs text-slate-400 font-bold">₹</span>
-                <input type="number" id="formExtraCharge" value="0" min="0" oninput="calculateModalTotal()" placeholder="0" class="w-full pl-6 pr-2 py-2 text-xs border border-slate-300 rounded-lg font-bold text-slate-900 bg-white focus:ring-2 focus:ring-brand-teal outline-none">
+                <input type="number" id="formExtraCharge" value="0" min="0" oninput="calculateModalTotal()" onchange="calculateModalTotal()" placeholder="0" class="w-full pl-6 pr-2 py-2 text-xs border border-slate-300 rounded-lg font-bold text-slate-900 bg-white focus:ring-2 focus:ring-brand-teal outline-none">
               </div>
             </div>
             <div class="sm:col-span-2">
               <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Equipment / Item Description</label>
-              <input type="text" id="formExtraNote" placeholder="e.g. 2 Riding Jackets + Knee Guards, Mobile Mount, Carrier" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-brand-teal outline-none">
+              <input type="text" id="formExtraNote" oninput="calculateModalTotal()" placeholder="e.g. 2 Riding Jackets + Knee Guards, Mobile Mount, Carrier" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-brand-teal outline-none">
             </div>
           </div>
         </div>
@@ -2906,8 +2982,11 @@ Current rate: ₹${b.rate}/day
       const start = document.getElementById('availStartDate')?.value;
       const end = document.getElementById('availEndDate')?.value;
       const cat = document.getElementById('availCategoryFilter')?.value || document.getElementById('availCategory')?.value || 'ALL';
-      const tripType = document.getElementById('availTripType')?.value || 'city';
+      const tripType = document.getElementById('availTripType')?.value || 'mountain';
       const reqStore = document.getElementById('availPickupStore')?.value || 'ALL';
+      const extraEst = parseFloat(document.getElementById('availExtraCharge')?.value) || 0;
+      const extraNoteEst = (document.getElementById('availExtraNote')?.value || '').trim();
+      const authEst = parseFloat(document.getElementById('availAuthCharge')?.value) || 0;
       const banner = document.getElementById('decisionBanner') || document.getElementById('availDecisionBanner');
       const gridFree = document.getElementById('availBikesGrid');
       const gridBusy = document.getElementById('availBusyGrid');
@@ -2973,7 +3052,7 @@ Current rate: ₹${b.rate}/day
               ${reqStore !== 'ALL' ? ` (${atStoreCount} at ${reqStore}, ${trRequiredCount} ready with Inter-Store Transfer)` : ' You can confidently confirm reservation and take advance!'}
             </div>
           </div>
-          <button onclick="openBookingWithDates('${start}', '${end}', '${reqStore}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow transition whitespace-nowrap flex items-center gap-1.5">
+          <button onclick="openBookingWithDates('${start}', '${end}', '${reqStore}', '${tripType}', ${authEst}, ${extraEst}, '${extraNoteEst.replace(/'/g, "\'")}')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow transition whitespace-nowrap flex items-center gap-1.5">
             <i class="fa-solid fa-plus"></i>
             <span>Quick Book One Now</span>
           </button>
@@ -2997,7 +3076,8 @@ Current rate: ₹${b.rate}/day
       gridFree.innerHTML = '';
       availableBikes.forEach(b => {
         const ratePerDay = (tripType === 'mountain' && b.is_scooter) ? b.mountain_rate : b.rate;
-        const totalEst = ratePerDay * diffDays;
+        const baseEst = ratePerDay * diffDays;
+        const totalEst = baseEst + authEst + extraEst;
 
         const card = document.createElement('div');
         card.className = 'bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-400 transition space-y-3';
@@ -3014,12 +3094,28 @@ Current rate: ₹${b.rate}/day
 
           <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs space-y-1">
             <div class="flex justify-between">
-              <span class="text-slate-600">Rate:</span>
+              <span class="text-slate-600">Daily Rate (${tripType === 'mountain' ? '🏔️ Mountain' : '🏙️ Local'}):</span>
               <span class="font-bold text-slate-900">₹${ratePerDay}/day</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-slate-600">Duration (${diffDays}d):</span>
-              <span class="font-extrabold text-brand-red">Total Est: ₹${totalEst}</span>
+              <span class="text-slate-600">Base Rent (${diffDays}d):</span>
+              <span class="font-semibold text-slate-800">₹${baseEst}</span>
+            </div>
+            ${authEst > 0 ? `
+              <div class="flex justify-between text-purple-700 font-semibold text-[11px]">
+                <span>+ Govt Permit/Auth Fee:</span>
+                <span>₹${authEst}</span>
+              </div>
+            ` : ''}
+            ${extraEst > 0 ? `
+              <div class="flex justify-between text-amber-800 font-semibold text-[11px]">
+                <span>+ Extras/Accessories:</span>
+                <span>₹${extraEst}${extraNoteEst ? ` (${extraNoteEst})` : ''}</span>
+              </div>
+            ` : ''}
+            <div class="flex justify-between pt-1 border-t border-slate-200">
+              <span class="font-bold text-slate-700">Total Est. Booking Cost:</span>
+              <span class="font-extrabold text-brand-red text-sm">₹${totalEst}</span>
             </div>
             <div class="flex justify-between pt-1 border-t border-slate-200 text-[11px]">
               <span class="text-slate-500">Stationed At:</span>
@@ -3043,7 +3139,7 @@ Current rate: ₹${b.rate}/day
               <i class="fa-solid fa-copy"></i>
               <span>Video Link</span>
             </button>
-            <button onclick="prefillBookingForPlate('${b.plate}', '${start}', '${end}', '${reqStore !== 'ALL' ? reqStore : ''}')" class="flex-1 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+            <button onclick="prefillBookingForPlate('${b.plate}', '${start}', '${end}', '${reqStore !== 'ALL' ? reqStore : ''}', '${tripType}', ${authEst}, ${extraEst}, '${extraNoteEst.replace(/'/g, "\'")}')" class="flex-1 py-1.5 bg-brand-red hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
               <i class="fa-solid fa-check"></i>
               <span>Book Bike</span>
             </button>
@@ -3089,12 +3185,7 @@ Current rate: ₹${b.rate}/day
       });
     }
 
-    function openBookingWithDates(start, end) {
-      openBookingModal();
-      document.getElementById('formPickupDate').value = start;
-      document.getElementById('formDropDate').value = end;
-      onBookingDatesChange();
-    }
+
 
     // -------------------------------------------------------------
     // TAB 3: MASTER BOOKINGS LOG (WITH EXCEL EXPORT & IMPORT)
@@ -4276,8 +4367,11 @@ Current rate: ₹${b.rate}/day
         if (typeof onModalPlateChange === 'function') onModalPlateChange();
       }
 
+      if (typeof setModalTripType === 'function') {
+        setModalTripType(b.trip_type || 'mountain');
+      }
       if (b.rate) document.getElementById('formRate').value = b.rate;
-      if (document.getElementById('formAuthCharge')) document.getElementById('formAuthCharge').value = b.auth_charge || 0;
+      if (document.getElementById('formAuthCharge')) document.getElementById('formAuthCharge').value = (typeof b.auth_charge !== 'undefined') ? b.auth_charge : 200;
       if (document.getElementById('formExtraCharge')) document.getElementById('formExtraCharge').value = b.extra_charge || 0;
       if (document.getElementById('formExtraNote')) document.getElementById('formExtraNote').value = b.extra_note || '';
       if (document.getElementById('formAdvance')) document.getElementById('formAdvance').value = b.advance || 0;
@@ -4600,6 +4694,9 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       const trBanner = document.getElementById('modalTransferBanner');
       if (trBanner) trBanner.classList.add('hidden');
 
+      if (typeof setModalTripType === 'function') {
+        setModalTripType('mountain');
+      }
       const authInput = document.getElementById('formAuthCharge');
       if (authInput) authInput.value = 200;
       const extraInput = document.getElementById('formExtraCharge');
@@ -4793,7 +4890,7 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       checkModalTransferRequirement();
 
       // Set Rate
-      const tripType = document.getElementById('formTripType').value;
+      const tripType = document.getElementById('formTripType')?.value || 'mountain';
       const rateInput = document.getElementById('formRate');
       let rate = b.rate;
       if (tripType === 'mountain' && b.is_scooter) {
@@ -4810,8 +4907,88 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       calculateModalTotal();
     }
 
-    function onModalTripTypeChange() {
+    // Availability tab trip type switch controller
+    function setAvailTripType(type) {
+      const select = document.getElementById('availTripType');
+      if (select) select.value = type;
+      const btnMountain = document.getElementById('btnAvailMountain');
+      const btnCity = document.getElementById('btnAvailCity');
+      const badge = document.getElementById('availTripTypeBadge');
+
+      if (type === 'mountain') {
+        if (btnMountain) btnMountain.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-brand-red text-white shadow-sm';
+        if (btnCity) btnCity.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900';
+        if (badge) {
+          badge.innerText = 'Mountain (+₹100 scooters)';
+          badge.className = 'text-[10px] text-amber-700 font-bold';
+        }
+      } else {
+        if (btnMountain) btnMountain.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900';
+        if (btnCity) btnCity.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-600 text-white shadow-sm';
+        if (badge) {
+          badge.innerText = 'Local City (-₹100 scooters)';
+          badge.className = 'text-[10px] text-emerald-700 font-bold';
+        }
+      }
+      runAvailabilityCheck();
+    }
+
+    function onAvailTripTypeDropdownChange() {
+      const val = document.getElementById('availTripType')?.value || 'mountain';
+      setAvailTripType(val);
+    }
+
+    function setAvailExtras(val, note) {
+      const chEl = document.getElementById('availExtraCharge');
+      const noEl = document.getElementById('availExtraNote');
+      if (chEl) chEl.value = val;
+      if (noEl) noEl.value = note;
+      runAvailabilityCheck();
+    }
+
+    // Booking modal trip type switch controller
+    function setModalTripType(type) {
+      const select = document.getElementById('formTripType');
+      if (select) select.value = type;
+      const btnMountain = document.getElementById('btnModalMountain');
+      const btnCity = document.getElementById('btnModalCity');
+      const hint = document.getElementById('modalTripTypeRateHint');
+
+      if (type === 'mountain') {
+        if (btnMountain) btnMountain.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-brand-red text-white shadow-sm';
+        if (btnCity) btnCity.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900';
+        if (hint) {
+          hint.innerText = 'Mountain (+₹100 scooters)';
+          hint.className = 'text-[10px] text-amber-700 font-bold';
+        }
+      } else {
+        if (btnMountain) btnMountain.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1 text-slate-600 hover:text-slate-900';
+        if (btnCity) btnCity.className = 'flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 bg-emerald-600 text-white shadow-sm';
+        if (hint) {
+          hint.innerText = 'Local City (-₹100 scooters)';
+          hint.className = 'text-[10px] text-emerald-700 font-bold';
+        }
+      }
       onModalPlateChange();
+    }
+
+    function onModalTripTypeChange() {
+      const val = document.getElementById('formTripType')?.value || 'mountain';
+      setModalTripType(val);
+    }
+
+    function setModalExtraCharge(val, note) {
+      const extraInput = document.getElementById('formExtraCharge');
+      const noteInput = document.getElementById('formExtraNote');
+      if (extraInput) extraInput.value = val;
+      if (noteInput) {
+        if (note && noteInput.value.trim() !== '') {
+          noteInput.value = noteInput.value.trim() + ', ' + note;
+        } else {
+          noteInput.value = note || '';
+        }
+      }
+      calculateModalTotal();
     }
 
     function applyNtorqNegotiatedRate() {
@@ -4846,17 +5023,17 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
       if (breakdown) {
         let parts = [`Base Rent: ${days}d × ₹${rate} = ₹${baseRent}`];
         if (auth > 0) parts.push(`Auth Fee: ₹${auth}`);
-        if (extra > 0) parts.push(`Extras: ₹${extra}`);
+        if (extra > 0) parts.push(`Extras/Accessories: ₹${extra}`);
         const rentBal = Math.max(0, total - adv);
         const depRaw = document.getElementById('formDeposit')?.value || '';
         const depMatch = depRaw.match(/\d[\d,]*/);
         const depNum = depMatch ? parseInt(depMatch[0].replace(/,/g, ''), 10) : 0;
         const totalDueAtPickup = rentBal + depNum;
-        breakdown.innerHTML = `${parts.join(' + ')} = <strong class="text-brand-red font-bold">Total Rent: ₹${total}</strong> (Adv: ₹${adv} · Rent Bal: ₹${rentBal}${depNum > 0 ? ` + Dep: ₹${depNum} = <strong class="text-emerald-700">Due at Pickup: ₹${totalDueAtPickup}</strong>` : ''})`;
+        breakdown.innerHTML = `${parts.join(' + ')} = <strong class="text-brand-red font-bold">Total Rent: ₹${total}</strong> (Adv: ₹${adv} · Rent Bal: ₹${rentBal}${depNum > 0 ? ` + Dep: ₹${depNum} = <strong class="text-emerald-700 font-extrabold">Due at Pickup: ₹${totalDueAtPickup}</strong>` : ''})`;
       }
     }
 
-    function prefillBookingForPlate(plate, start, end, forcedPickupStore = '') {
+    function prefillBookingForPlate(plate, start, end, forcedPickupStore = '', tripType = 'mountain', authCharge = 200, extraCharge = 0, extraNote = '') {
       openBookingModal();
       if (start) document.getElementById('formPickupDate').value = start;
       if (end) document.getElementById('formDropDate').value = end;
@@ -4868,11 +5045,25 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
           pb.dataset.explicit = 'true';
         }
       }
+      if (tripType) setModalTripType(tripType);
+      if (typeof authCharge !== 'undefined' && authCharge !== null) {
+        const aEl = document.getElementById('formAuthCharge');
+        if (aEl) aEl.value = authCharge;
+      }
+      if (typeof extraCharge !== 'undefined' && extraCharge !== null) {
+        const eEl = document.getElementById('formExtraCharge');
+        if (eEl) eEl.value = extraCharge;
+      }
+      if (extraNote) {
+        const enEl = document.getElementById('formExtraNote');
+        if (enEl) enEl.value = extraNote;
+      }
       document.getElementById('formPlate').value = plate;
       onModalPlateChange();
+      calculateModalTotal();
     }
 
-    function openBookingWithDates(start, end, forcedStore = '') {
+    function openBookingWithDates(start, end, forcedStore = '', tripType = 'mountain', authCharge = 200, extraCharge = 0, extraNote = '') {
       openBookingModal();
       if (start) document.getElementById('formPickupDate').value = start;
       if (end) document.getElementById('formDropDate').value = end;
@@ -4883,8 +5074,22 @@ This will mark the vehicle as Active (On Trip) starting today.`)) {
           pb.dataset.explicit = 'true';
         }
       }
+      if (tripType) setModalTripType(tripType);
+      if (typeof authCharge !== 'undefined' && authCharge !== null) {
+        const aEl = document.getElementById('formAuthCharge');
+        if (aEl) aEl.value = authCharge;
+      }
+      if (typeof extraCharge !== 'undefined' && extraCharge !== null) {
+        const eEl = document.getElementById('formExtraCharge');
+        if (eEl) eEl.value = extraCharge;
+      }
+      if (extraNote) {
+        const enEl = document.getElementById('formExtraNote');
+        if (enEl) enEl.value = extraNote;
+      }
       onBookingDatesChange();
       updateModalVehicleDropdown();
+      calculateModalTotal();
     }
 
     function saveBookingAndConfirm(e) {
@@ -5426,12 +5631,15 @@ Please select another vehicle.`);
 
       const b = fleet.find(x => x.plate === p);
       const days = calculateRentalDays(start, end);
-      const total = parseFloat(document.getElementById('formTotalRent').value) || 0;
       const adv = parseFloat(document.getElementById('formAdvance').value) || 0;
       const authCharge = parseFloat(document.getElementById('formAuthCharge')?.value) || 0;
       const extraCharge = parseFloat(document.getElementById('formExtraCharge')?.value) || 0;
       const extraNote = document.getElementById('formExtraNote')?.value.trim() || '';
+      const currentTripType = document.getElementById('formTripType')?.value || 'mountain';
       const baseRent = days * rate;
+      const calculatedTotal = baseRent + authCharge + extraCharge;
+      const total = calculatedTotal;
+      if (document.getElementById('formTotalRent')) document.getElementById('formTotalRent').value = total;
 
       let selectedStatus = document.getElementById('formStatus').value;
       // Auto-enforce: future bookings must be marked Upcoming (Future Reserved)
@@ -5458,6 +5666,7 @@ Please select another vehicle.`);
         drop_branch: dropStore,
         days: days,
         rate: rate,
+        trip_type: currentTripType,
         base_rent: baseRent,
         auth_charge: authCharge,
         extra_charge: extraCharge,
@@ -6067,7 +6276,7 @@ Please select another vehicle.`);
 
         let extrasLine = '';
         if (extra > 0) {
-          extrasLine = `• Add-on Extras/Gears: *₹${extra}*${b.extra_note ? ` (${b.extra_note})` : ''}\n`;
+          extrasLine = `• Add-on Extras & Accessories: *₹${extra}*${b.extra_note ? ` (${b.extra_note})` : ''}\n`;
         }
 
         let depositText = '';
@@ -6087,7 +6296,7 @@ Please select another vehicle.`);
                `📅 *Trip Schedule:*\n` +
                `• Pickup: *${pickStore}* on *${b.pickup_date}* (${b.pickup_time || '10:00 AM'})\n` +
                `• Drop: *${dropStore}* by *${b.drop_date}* (${b.drop_time || '07:00 PM'})\n` +
-               `• Duration: *${days} Days* @ ₹${rate}/day\n\n` +
+               `• Duration: *${days} Days* (${(b.trip_type === 'city') ? 'Local City Ride' : 'Mountain & Hills Ride'}) @ ₹${rate}/day\n\n` +
                `💰 *Payment Breakdown:*\n` +
                `• Base Rent (${days}d × ₹${rate}): *₹${baseRent}*\n` +
                `${authLine}` +
@@ -6461,6 +6670,8 @@ Please select another vehicle.`);
       if (sDate) sDate.value = td;
       const eDate = document.getElementById('availEndDate');
       if (eDate) eDate.value = in2;
+
+      setAvailTripType('mountain');
 
       updateKpis();
       renderDashboardTable();
